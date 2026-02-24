@@ -363,8 +363,8 @@ const Watch = () => {
             <div className="video-details glass p-4">
                 <h1 className="watch-title">{video.title}</h1>
 
-                <div className="watch-meta flex-row ai-center jc-between w-100" style={{ marginTop: '8px' }}>
-                    <div className="flex-row ai-center gap-3">
+                <div className="watch-meta flex-row ai-center jc-between w-100" style={{ marginTop: '8px', flexWrap: 'wrap', gap: '12px' }}>
+                    <div className="flex-row ai-center gap-2" style={{ flexWrap: 'wrap' }}>
                         <div className={`rank-badge rank-${video.rank}`}>
                             {video.rank.toUpperCase()} TIER
                         </div>

@@ -73,3 +73,19 @@
     color: #f59e0b;
     background: rgba(245, 158, 11, 0.1);
 }
+
+/* Responsive List Items for Admin Video/User Management */
+@media (max-width: 600px) {
+    .admin-list-item {
+        flex-direction: column !important;
+        align-items: flex-start !important;
+        gap: 16px !important;
+    }
+
+    .admin-list-actions {
+        width: 100%;
+        justify-content: flex-end;
+        padding-top: 8px;
+        border-top: 1px solid var(--border-color);
+    }
+}

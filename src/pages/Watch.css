@@ -414,4 +414,13 @@
     .volume-container {
         width: 70px;
     }
+
+    .watch-meta {
+        font-size: 0.8rem;
+    }
+
+    .btn-action {
+        font-size: 0.8rem;
+        padding: 6px 8px;
+    }
 }

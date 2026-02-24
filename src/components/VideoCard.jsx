@@ -28,15 +28,15 @@ const VideoCard = ({ video }) => {
             <div className="video-info">
                 <h3 className="video-title" title={video.title}>{video.title}</h3>
                 <p className="video-desc">{video.description || 'No description available'}</p>
-                <div className="video-meta flex-row ai-center jc-between mt-2">
+                <div className="video-meta flex-row ai-center jc-between mt-2" style={{ flexWrap: 'wrap', gap: '8px' }}>
                     <span className={`rank-tag rank-${video.rank}`}>
                         {video.rank.toUpperCase()}
                     </span>
-                    <div className="flex-row ai-center gap-3">
-                        <span className="flex-row ai-center gap-1 text-muted" style={{ fontSize: '0.8rem' }}>
-                            <Eye size={14} /> {video.views || 0}
+                    <div className="flex-row ai-center gap-2">
+                        <span className="flex-row ai-center text-muted" style={{ fontSize: '0.75rem', gap: '4px' }}>
+                            <Eye size={12} /> {video.views || 0}
                         </span>
-                        <span className="upload-date">
+                        <span className="upload-date" style={{ fontSize: '0.75rem' }}>
                             {new Date(video.uploadDate).toLocaleDateString()}
                         </span>
                     </div>
