@@ -1,0 +1,75 @@
+.admin-container {
+    max-width: 1000px;
+    margin: 0 auto;
+}
+
+.admin-title {
+    font-size: 2rem;
+    font-weight: 700;
+    margin-bottom: 8px;
+}
+
+.admin-subtitle {
+    color: var(--text-muted);
+    font-size: 1.1rem;
+    margin-bottom: 32px;
+}
+
+.admin-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 24px;
+}
+
+.admin-card {
+    padding: 32px 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    transition: transform var(--transition-normal);
+    text-decoration: none;
+}
+
+.admin-card:hover {
+    transform: translateY(-4px);
+    background: var(--surface-hover);
+}
+
+.admin-card h3 {
+    font-size: 1.3rem;
+    font-weight: 600;
+    color: var(--text-main);
+    margin: 0;
+}
+
+.admin-card p {
+    color: var(--text-muted);
+    font-size: 0.95rem;
+    margin: 0;
+    line-height: 1.5;
+}
+
+.admin-icon-wrapper {
+    width: 64px;
+    height: 64px;
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.blue {
+    color: #3b82f6;
+    background: rgba(59, 130, 246, 0.1);
+}
+
+.green {
+    color: #10b981;
+    background: rgba(16, 185, 129, 0.1);
+}
+
+.orange {
+    color: #f59e0b;
+    background: rgba(245, 158, 11, 0.1);
+}

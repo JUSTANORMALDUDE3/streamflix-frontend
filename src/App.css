@@ -1,0 +1,26 @@
+.app-main-wrapper {
+  display: flex;
+  flex-direction: row;
+  flex: 1;
+  padding-top: var(--navbar-height);
+  min-height: 100vh;
+}
+
+.app-main-content {
+  flex: 1;
+  padding: 24px;
+  overflow-y: auto;
+}
+
+/* Mobile Responsiveness for Core Root Layout */
+@media (max-width: 768px) {
+  .app-main-wrapper {
+    flex-direction: column;
+  }
+
+  .app-main-content {
+    padding: 16px;
+    padding-bottom: 90px;
+    /* Clear the bottom navigation bar */
+  }
+}
