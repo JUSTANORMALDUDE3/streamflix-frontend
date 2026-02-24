@@ -35,7 +35,7 @@ const AdminDashboard = () => {
                 </Link>
 
                 {/* This link directs to the backend API endpoint for Drive Auth directly because it's OAuth */}
-                <a href="http://localhost:5000/api/admin/auth/drive" className="admin-card glass" target="_blank" rel="noreferrer">
+                <a href={`${import.meta.env.VITE_API_URL}/admin/auth/drive`} className="admin-card glass" target="_blank" rel="noreferrer">
                     <div className="admin-icon-wrapper orange">
                         <HardDrive size={32} />
                     </div>

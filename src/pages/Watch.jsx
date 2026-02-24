@@ -106,7 +106,7 @@ const Watch = () => {
     }
 
     // Generate Stream URL
-    const streamUrl = `http://localhost:5000/api/videos/stream/${video._id}`;
+    const streamUrl = `${import.meta.env.VITE_API_URL}/videos/stream/${video._id}`;
 
     const formatTime = (time) => {
         if (isNaN(time)) return '0:00';
