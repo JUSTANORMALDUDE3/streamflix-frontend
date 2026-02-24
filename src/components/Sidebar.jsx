@@ -14,11 +14,11 @@ const Sidebar = () => {
     return (
         <aside className="sidebar">
             <div className="sidebar-menu">
-                <Link to="/" className={`menu-item ${!currentCategory ? 'active' : ''}`}>
+                <NavLink to="/" end className={({ isActive }) => `menu-item ${isActive && !currentCategory ? 'active' : ''}`}>
                     <Home size={22} />
                     <span>Home</span>
-                </Link>
-                <NavLink to="/explore" className="menu-item disabled">
+                </NavLink>
+                <NavLink to="/explore" className={({ isActive }) => `menu-item ${isActive ? 'active' : ''}`}>
                     <Compass size={22} />
                     <span>Explore</span>
                 </NavLink>

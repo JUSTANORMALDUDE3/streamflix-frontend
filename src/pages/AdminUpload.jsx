@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import axios from 'axios';
-import { ArrowLeft, UploadCloud } from 'lucide-react';
+import { ArrowLeft, UploadCloud, RefreshCw } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import CustomSelect from '../components/CustomSelect';
 import './Admin.css';
@@ -65,6 +65,19 @@ const AdminUpload = () => {
             } else {
                 setMessage('');
             }
+        }
+    };
+
+    const handleRegenerateThumbnail = async () => {
+        if (!videoFile) return;
+        setMessage('Regenerating new thumbnail...');
+        const dataUrl = await generateThumbnail(videoFile);
+        if (dataUrl) {
+            setGeneratedThumbnail(dataUrl);
+            setMessage('New thumbnail generated successfully!');
+        } else {
+            setMessage('');
+            setError('Failed to regenerate thumbnail.');
         }
     };
 
@@ -184,10 +197,22 @@ const AdminUpload = () => {
                             />
                         </div>
                         {generatedThumbnail && !thumbnailUrl && (
-                            <div className="mt-4" style={{ borderRadius: '12px', overflow: 'hidden', height: '140px', width: '250px', border: '1px solid var(--border-color)' }}>
-                                <img src={generatedThumbnail} alt="Generated Preview" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                                <div style={{ textAlign: 'center', fontSize: '12px', background: 'var(--surface-color)', padding: '4px' }}>Auto-Generated Thumbnail Preview</div>
-                            </div>
+                            <>
+                                <div className="mt-4" style={{ borderRadius: '12px', overflow: 'hidden', height: '140px', width: '250px', border: '1px solid var(--border-color)', position: 'relative' }}>
+                                    <img src={generatedThumbnail} alt="Generated Preview" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                    <div className="desktop-thumbnail-overlay" style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: 0, transition: 'opacity 0.2s' }}
+                                        onMouseEnter={e => e.currentTarget.style.opacity = 1}
+                                        onMouseLeave={e => e.currentTarget.style.opacity = 0}>
+                                        <button type="button" onClick={handleRegenerateThumbnail} style={{ background: 'var(--primary-color)', color: '#fff', border: 'none', padding: '8px 16px', borderRadius: '8px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                            <RefreshCw size={16} /> Regenerate
+                                        </button>
+                                    </div>
+                                    <div style={{ textAlign: 'center', fontSize: '12px', background: 'var(--surface-color)', padding: '4px', position: 'absolute', bottom: 0, width: '100%' }}>Auto-Generated Thumbnail Preview</div>
+                                </div>
+                                <button type="button" className="btn-primary mobile-thumbnail-btn" onClick={handleRegenerateThumbnail}>
+                                    <RefreshCw size={16} style={{ marginRight: '8px' }} /> Regenerate
+                                </button>
+                            </>
                         )}
                     </div>
 

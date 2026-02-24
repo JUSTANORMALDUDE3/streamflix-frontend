@@ -74,7 +74,11 @@
     background: rgba(245, 158, 11, 0.1);
 }
 
-/* Responsive List Items for Admin Video/User Management */
+/* Mobile Thumbnail Regeneration Visibility Setup */
+.mobile-thumbnail-btn {
+    display: none !important;
+}
+
 @media (max-width: 600px) {
     .admin-list-item {
         flex-direction: column !important;
@@ -87,5 +91,17 @@
         justify-content: flex-end;
         padding-top: 8px;
         border-top: 1px solid var(--border-color);
+    }
+
+    .desktop-thumbnail-overlay {
+        display: none !important;
+    }
+
+    .mobile-thumbnail-btn {
+        display: flex !important;
+        align-items: center;
+        justify-content: center;
+        width: 100%;
+        margin-top: 8px;
     }
 }

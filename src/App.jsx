@@ -6,6 +6,7 @@ import './App.css';
 // Pages
 import Login from './pages/Login';
 import Home from './pages/Home';
+import Explore from './pages/Explore';
 import Watch from './pages/Watch';
 import AdminDashboard from './pages/AdminDashboard';
 import AdminUpload from './pages/AdminUpload';
@@ -49,6 +50,7 @@ const App = () => {
 
         {/* Protected Regular Routes */}
         <Route path="/" element={<ProtectedRoute><AppLayout><Home /></AppLayout></ProtectedRoute>} />
+        <Route path="/explore" element={<ProtectedRoute><AppLayout><Explore /></AppLayout></ProtectedRoute>} />
         <Route path="/watch/:id" element={<ProtectedRoute><AppLayout><Watch /></AppLayout></ProtectedRoute>} />
 
         <Route path="/admin" element={<ProtectedRoute adminOnly><AppLayout><AdminDashboard /></AppLayout></ProtectedRoute>} />
