@@ -1,9 +1,18 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Play, Eye } from 'lucide-react';
+import { Play, Eye, Lock } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
 import './VideoCard.css';
 
 const VideoCard = ({ video }) => {
+    const { user } = useAuth();
+
+    // Calculate if video is locked for this user
+    const rankMapper = { 'top': 3, 'middle': 2, 'free': 1 };
+    const userRankVal = user && user.role === 'admin' ? 99 : (user ? rankMapper[user.rank] || 0 : 0);
+    const videoRankVal = rankMapper[video.rank] || 3;
+    const isLocked = userRankVal < videoRankVal;
+
     const getRankTheme = (rank) => {
         switch (rank) {
             case 'top': return 'var(--rank-top-bg)';
@@ -19,11 +28,18 @@ const VideoCard = ({ video }) => {
                 <img
                     src={video.thumbnailUrl || 'https://via.placeholder.com/640x360.png?text=No+Thumbnail'}
                     alt={video.title}
-                    className="video-thumbnail"
+                    className={`video-thumbnail ${isLocked ? 'locked-thumb' : ''}`}
                 />
-                <div className="play-overlay">
-                    <Play fill="white" size={32} />
-                </div>
+
+                {isLocked ? (
+                    <div className="locked-overlay">
+                        <Lock size={32} fill="currentColor" />
+                    </div>
+                ) : (
+                    <div className="play-overlay">
+                        <Play fill="white" size={32} />
+                    </div>
+                )}
             </div>
             <div className="video-info">
                 <h3 className="video-title" title={video.title}>{video.title}</h3>

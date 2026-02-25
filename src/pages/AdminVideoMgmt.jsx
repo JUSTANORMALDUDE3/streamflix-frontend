@@ -155,7 +155,7 @@ const AdminVideoMgmt = () => {
                 message={`Are you sure you want to completely erase "${videoToDelete?.title}"? This will permanently delete the file off Google Drive.`}
                 isLoading={isDeleting}
             />
-        </div>
+        </div >
     );
 };
 

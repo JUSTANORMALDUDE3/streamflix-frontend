@@ -2,8 +2,9 @@ import React, { useEffect, useState, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import Loader from '../components/Loader';
-import { ArrowLeft, Clock, Shield, Play, Pause, Volume2, VolumeX, Maximize, Minimize, ThumbsUp, ThumbsDown, Eye, FastForward, Rewind } from 'lucide-react';
+import { ArrowLeft, Clock, Shield, Play, Pause, Volume2, VolumeX, Maximize, Minimize, ThumbsUp, ThumbsDown, Eye, FastForward, Rewind, Download } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import TokenModal from '../components/TokenModal';
 import './Watch.css';
 
 const Watch = () => {
@@ -20,8 +21,11 @@ const Watch = () => {
     const [error, setError] = useState('');
     const [lastTap, setLastTap] = useState(0);
     const [skipAction, setSkipAction] = useState(null);
+    const showTokenModal = false; // Note: Re-enable token logic as needed
+    const setShowTokenModal = () => { };
 
     const videoRef = useRef(null);
+    const canvasRef = useRef(null);
     const playerWrapperRef = useRef(null);
     const controlsTimeoutRef = useRef(null);
 
@@ -91,6 +95,29 @@ const Watch = () => {
         };
     }, []);
 
+    // Rank Math for UI Locking (Calculated early for Hooks order)
+    const rankMapper = { 'top': 3, 'middle': 2, 'free': 1 };
+    const userRankVal = user && user.role === 'admin' ? 99 : (user ? rankMapper[user.rank] || 0 : 0);
+    const videoRankVal = video ? (rankMapper[video.rank] || 3) : 3;
+    const isLocked = userRankVal < videoRankVal;
+
+    // Canvas Pixelation Effect for Locked Videos must be ABOVE early returns
+    useEffect(() => {
+        if (isLocked && video?.thumbnailUrl && canvasRef.current) {
+            const img = new Image();
+            img.src = video.thumbnailUrl;
+            img.onload = () => {
+                const canvas = canvasRef.current;
+                if (!canvas) return;
+                const ctx = canvas.getContext('2d');
+                // Extremely low resolution buffer (32x18) creates massive pixel blocks
+                canvas.width = 32;
+                canvas.height = 18;
+                ctx.drawImage(img, 0, 0, 32, 18);
+            };
+        }
+    }, [isLocked, video?.thumbnailUrl]);
+
     if (loading) return <Loader fullScreen={false} />;
 
     if (error || !video) {
@@ -104,9 +131,8 @@ const Watch = () => {
             </div>
         );
     }
-
     // Generate Stream URL
-    const streamUrl = `${import.meta.env.VITE_API_URL}/videos/stream/${video._id}`;
+    const streamUrl = `${import.meta.env.VITE_API_URL}/videos/stream/${video?._id || ''}`;
 
     const formatTime = (time) => {
         if (isNaN(time)) return '0:00';
@@ -282,82 +308,96 @@ const Watch = () => {
                 onMouseMove={handleMouseMove}
                 onMouseLeave={() => isPlaying && setShowControls(false)}
             >
-                <video
-                    ref={videoRef}
-                    autoPlay
-                    onClick={handleVideoClick}
-                    onTimeUpdate={handleTimeUpdate}
-                    onLoadedMetadata={handleLoadedMetadata}
-                    onPlay={() => setIsPlaying(true)}
-                    onPause={() => setIsPlaying(false)}
-                    onWaiting={() => setIsBuffering(true)}
-                    onPlaying={() => setIsBuffering(false)}
-                    onCanPlay={() => setIsBuffering(false)}
-                    controlsList="nodownload"
-                    onContextMenu={(e) => e.preventDefault()}
-                    className="video-player"
-                    poster={video.thumbnailUrl}
-                >
-                    <source src={streamUrl} type="video/mp4" />
-                    Your browser does not support HTML video.
-                </video>
+                {!isLocked ? (
+                    <>
+                        <video
+                            ref={videoRef}
+                            autoPlay
+                            onClick={handleVideoClick}
+                            onTimeUpdate={handleTimeUpdate}
+                            onLoadedMetadata={handleLoadedMetadata}
+                            onPlay={() => setIsPlaying(true)}
+                            onPause={() => setIsPlaying(false)}
+                            onWaiting={() => setIsBuffering(true)}
+                            onPlaying={() => setIsBuffering(false)}
+                            onCanPlay={() => setIsBuffering(false)}
+                            controlsList="nodownload"
+                            onContextMenu={(e) => e.preventDefault()}
+                            className="video-player"
+                            poster={video.thumbnailUrl}
+                        >
+                            <source src={streamUrl} type="video/mp4" />
+                            Your browser does not support HTML video.
+                        </video>
 
-                {skipAction === 'backward' && (
-                    <div className="skip-indicator skip-left">
-                        <Rewind size={40} fill="currentColor" />
-                        <span>-10s</span>
-                    </div>
-                )}
-                {skipAction === 'forward' && (
-                    <div className="skip-indicator skip-right">
-                        <FastForward size={40} fill="currentColor" />
-                        <span>+10s</span>
-                    </div>
-                )}
+                        {skipAction === 'backward' && (
+                            <div className="skip-indicator skip-left">
+                                <Rewind size={40} fill="currentColor" />
+                                <span>-10s</span>
+                            </div>
+                        )}
+                        {skipAction === 'forward' && (
+                            <div className="skip-indicator skip-right">
+                                <FastForward size={40} fill="currentColor" />
+                                <span>+10s</span>
+                            </div>
+                        )}
 
-                {isBuffering && (
-                    <div className="video-buffering-overlay">
-                        <div className="video-spinner"></div>
-                    </div>
-                )}
+                        {isBuffering && (
+                            <div className="video-buffering-overlay">
+                                <div className="video-spinner"></div>
+                            </div>
+                        )}
 
-                <div className={`video-controls-overlay ${showControls || !isPlaying ? 'active' : ''}`}>
-                    <div className="progress-container" onClick={handleProgressScrub}>
-                        <div className="progress-filled" style={{ width: `${progress}%` }}></div>
-                    </div>
-
-                    <div className="control-bar">
-                        <div className="control-group">
-                            <button className="control-btn" onClick={togglePlay} title={isPlaying ? "Pause" : "Play"}>
-                                {isPlaying ? <Pause fill="currentColor" size={24} /> : <Play fill="currentColor" size={24} />}
-                            </button>
-
-                            <div className="volume-container">
-                                <button className="control-btn" onClick={toggleMute} title={isMuted ? "Unmute" : "Mute"}>
-                                    {isMuted || volume === 0 ? <VolumeX size={20} /> : <Volume2 size={20} />}
-                                </button>
-                                <input
-                                    type="range"
-                                    min="0" max="1" step="0.05"
-                                    className="volume-slider"
-                                    value={isMuted ? 0 : volume}
-                                    onChange={handleVolumeChange}
-                                    style={{ background: `linear-gradient(to right, var(--primary-color) ${(isMuted ? 0 : volume) * 100}%, rgba(255,255,255,0.3) ${(isMuted ? 0 : volume) * 100}%)` }}
-                                />
+                        <div className={`video-controls-overlay ${showControls || !isPlaying ? 'active' : ''}`}>
+                            <div className="progress-container" onClick={handleProgressScrub}>
+                                <div className="progress-filled" style={{ width: `${progress}%` }}></div>
                             </div>
 
-                            <div className="time-display">
-                                {currentTime} / {duration}
+                            <div className="control-bar">
+                                <div className="control-group">
+                                    <button className="control-btn" onClick={togglePlay} title={isPlaying ? "Pause" : "Play"}>
+                                        {isPlaying ? <Pause fill="currentColor" size={24} /> : <Play fill="currentColor" size={24} />}
+                                    </button>
+
+                                    <div className="volume-container">
+                                        <button className="control-btn" onClick={toggleMute} title={isMuted ? "Unmute" : "Mute"}>
+                                            {isMuted || volume === 0 ? <VolumeX size={20} /> : <Volume2 size={20} />}
+                                        </button>
+                                        <input
+                                            type="range"
+                                            min="0" max="1" step="0.05"
+                                            className="volume-slider"
+                                            value={isMuted ? 0 : volume}
+                                            onChange={handleVolumeChange}
+                                            style={{ background: `linear-gradient(to right, var(--primary-color) ${(isMuted ? 0 : volume) * 100}%, rgba(255,255,255,0.3) ${(isMuted ? 0 : volume) * 100}%)` }}
+                                        />
+                                    </div>
+
+                                    <div className="time-display">
+                                        {currentTime} / {duration}
+                                    </div>
+                                </div>
+
+                                <div className="control-group">
+                                    <button className="control-btn" onClick={toggleFullScreen} title="Fullscreen">
+                                        {isFullScreen ? <Minimize size={20} /> : <Maximize size={20} />}
+                                    </button>
+                                </div>
                             </div>
                         </div>
-
-                        <div className="control-group">
-                            <button className="control-btn" onClick={toggleFullScreen} title="Fullscreen">
-                                {isFullScreen ? <Minimize size={20} /> : <Maximize size={20} />}
-                            </button>
+                    </>
+                ) : (
+                    <div className="mosaic-lock animate-fade-in">
+                        <canvas ref={canvasRef} className="mosaic-bg" />
+                        <div className="mosaic-overlay"></div>
+                        <div className="lock-content">
+                            <Shield size={48} className="primary-color" style={{ filter: 'drop-shadow(0 0 10px rgba(99,102,241,0.5))' }} />
+                            <h3>Rank Required</h3>
+                            <p>You need `<span className={`rank-badge rank-${video.rank}`}>{video.rank.toUpperCase()}</span>` rank to watch this video.</p>
                         </div>
                     </div>
-                </div>
+                )}
             </div>
 
             <div className="video-details glass p-4">
@@ -393,6 +433,16 @@ const Watch = () => {
                             <ThumbsDown size={18} fill={likeData.isDisliked ? 'currentColor' : 'none'} />
                             <span>{likeData.dislikes}</span>
                         </button>
+                        <button
+                            className="btn-download flex-row ai-center gap-2"
+                            onClick={() => setShowTokenModal(true)}
+                            disabled={isLocked}
+                            title={isLocked ? "Rank required to download" : "Download Video"}
+                            style={isLocked ? { opacity: 0.5, cursor: 'not-allowed', filter: 'grayscale(1)' } : {}}
+                        >
+                            <Download size={18} />
+                            <span>Download</span>
+                        </button>
                     </div>
                 </div>
 
@@ -403,6 +453,10 @@ const Watch = () => {
                     <p>{video.description || 'No description provided for this video.'}</p>
                 </div>
             </div>
+
+            {showTokenModal && (
+                <TokenModal videoId={id} onClose={() => setShowTokenModal(false)} />
+            )}
         </div>
     );
 };

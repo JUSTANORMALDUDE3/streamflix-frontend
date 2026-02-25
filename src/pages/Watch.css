@@ -152,6 +152,56 @@
     fill: none;
 }
 
+/* Download Button Styling */
+.btn-download {
+    background: var(--primary-color);
+    color: white;
+    border: none;
+    padding: 8px 24px;
+    border-radius: 30px;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 0.9rem;
+    transition: all var(--transition-fast);
+    box-shadow: 0 4px 15px rgba(99, 102, 241, 0.4);
+    position: relative;
+    overflow: hidden;
+}
+
+.btn-download:hover {
+    background: var(--primary-hover);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(99, 102, 241, 0.5);
+}
+
+.btn-download:active {
+    transform: translateY(0) scale(0.95);
+}
+
+.btn-download::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 50%;
+    height: 100%;
+    background: linear-gradient(to right, rgba(255, 255, 255, 0) 0%, rgba(255, 255, 255, 0.3) 50%, rgba(255, 255, 255, 0) 100%);
+    transform: skewX(-25deg);
+    transition: left 0.75s ease;
+}
+
+.btn-download:hover::before {
+    left: 150%;
+}
+
+.btn-download svg {
+    transition: transform var(--transition-fast);
+}
+
+.btn-download:hover svg {
+    transform: translateY(2px);
+}
+
 .watch-description h3 {
     font-size: 1.1rem;
     font-weight: 600;
@@ -394,6 +444,70 @@
     to {
         transform: rotate(360deg);
     }
+}
+
+/* Mosaic Lock Screen styling */
+.mosaic-lock {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 10;
+    overflow: hidden;
+    background: #000;
+}
+
+.mosaic-bg {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    /* Force nearest-neighbor blocky rendering on the intentionally low-res canvas */
+    image-rendering: -moz-crisp-edges;
+    image-rendering: pixelated;
+    opacity: 0.7;
+    z-index: 0;
+}
+
+.mosaic-overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.4);
+    z-index: 1;
+}
+
+.lock-content {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+    background: rgba(0, 0, 0, 0.5);
+    padding: 32px 48px;
+    border-radius: 16px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    text-align: center;
+}
+
+.lock-content h3 {
+    margin: 0;
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--text-color);
+}
+
+.lock-content p {
+    margin: 0;
+    color: var(--text-muted);
+    font-size: 0.95rem;
+    max-width: 250px;
 }
 
 /* Mobile Responsiveness */

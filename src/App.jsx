@@ -12,6 +12,7 @@ import AdminDashboard from './pages/AdminDashboard';
 import AdminUpload from './pages/AdminUpload';
 import AdminUserMgmt from './pages/AdminUserMgmt';
 import AdminVideoMgmt from './pages/AdminVideoMgmt';
+import AdminTokenMgmt from './pages/AdminTokenMgmt';
 
 // Layout
 import Navbar from './components/Navbar';
@@ -57,6 +58,7 @@ const App = () => {
         <Route path="/admin/upload" element={<ProtectedRoute adminOnly><AppLayout><AdminUpload /></AppLayout></ProtectedRoute>} />
         <Route path="/admin/users" element={<ProtectedRoute adminOnly><AppLayout><AdminUserMgmt /></AppLayout></ProtectedRoute>} />
         <Route path="/admin/videos" element={<ProtectedRoute adminOnly><AppLayout><AdminVideoMgmt /></AppLayout></ProtectedRoute>} />
+        <Route path="/admin/tokens" element={<ProtectedRoute adminOnly><AppLayout><AdminTokenMgmt /></AppLayout></ProtectedRoute>} />
       </Routes>
     </Router>
   );

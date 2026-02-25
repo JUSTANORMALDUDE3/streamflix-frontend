@@ -39,6 +39,15 @@
     transform: scale(1.08);
 }
 
+.locked-thumb {
+    filter: brightness(0.4) blur(3px);
+}
+
+.video-card:hover .locked-thumb {
+    filter: brightness(0.5) blur(2px);
+    transform: scale(1.02);
+}
+
 .play-overlay {
     position: absolute;
     top: 0;
@@ -55,6 +64,27 @@
 
 .video-card:hover .play-overlay {
     opacity: 1;
+}
+
+.locked-overlay {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: rgba(0, 0, 0, 0.6);
+    border-radius: 50%;
+    padding: 16px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    color: var(--text-color);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    transition: transform var(--transition-fast);
+}
+
+.video-card:hover .locked-overlay {
+    transform: translate(-50%, -50%) scale(1.05);
 }
 
 .video-info {

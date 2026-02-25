@@ -1,12 +1,23 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { ChevronDown } from 'lucide-react';
+import { ChevronDown, Search } from 'lucide-react';
 import './CustomSelect.css';
 
 const CustomSelect = ({ options, value, onChange }) => {
     const [isOpen, setIsOpen] = useState(false);
+    const [searchQuery, setSearchQuery] = useState('');
     const selectRef = useRef(null);
 
     const selectedOption = options.find(opt => opt.value === value);
+
+    const filteredOptions = options.filter(option =>
+        option.label.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+
+    useEffect(() => {
+        if (!isOpen) {
+            setSearchQuery('');
+        }
+    }, [isOpen]);
 
     useEffect(() => {
         const handleClickOutside = (event) => {
@@ -35,15 +46,31 @@ const CustomSelect = ({ options, value, onChange }) => {
             </div>
             {isOpen && (
                 <div className="custom-select-dropdown glass animate-fade-in">
-                    {options.map((option) => (
-                        <div
-                            key={option.value}
-                            className={`custom-select-option ${option.value === value ? 'selected' : ''}`}
-                            onClick={() => handleSelect(option.value)}
-                        >
-                            {option.label}
-                        </div>
-                    ))}
+                    <div className="custom-select-search-container">
+                        <Search size={16} className="custom-select-search-icon" />
+                        <input
+                            type="text"
+                            className="custom-select-search-input"
+                            placeholder="Search videos..."
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            onClick={(e) => e.stopPropagation()}
+                            autoFocus
+                        />
+                    </div>
+                    <div className="custom-select-options-list">
+                        {filteredOptions.length > 0 ? filteredOptions.map((option) => (
+                            <div
+                                key={option}
+                                className={`custom-select-option ${option.value === value ? 'selected' : ''}`}
+                                onClick={() => handleSelect(option.value)}
+                            >
+                                {option.label}
+                            </div>
+                        )) : (
+                            <div className="custom-select-no-results">No videos found.</div>
+                        )}
+                    </div>
                 </div>
             )}
         </div>
