@@ -92,6 +92,8 @@
     padding: 16px;
     display: flex;
     flex-direction: column;
+    flex: 1; /* Stretch to fill parent height */
+    justify-content: space-between; /* Push meta data to bottom */
     gap: 8px;
 }
 
