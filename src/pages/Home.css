@@ -34,10 +34,26 @@
     font-weight: 700;
 }
 
+/* ===========================
+   Video Grid — Core Layout
+   =========================== */
+.video-grid {
+    display: grid;
+    /* Desktop: flexible columns, min 260px each */
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    /* KEY FIX: Every row is exactly the same fixed height.
+       This is CSS Grid's built-in mechanism for equal-height rows
+       and it cannot be overridden by text content. */
+    grid-auto-rows: 310px;
+    gap: 20px;
+    align-items: start;
+}
+
+/* Animation for search results */
 @keyframes searchResultPop {
     0% {
         opacity: 0;
-        transform: scale(0.9) translateY(20px);
+        transform: scale(0.95) translateY(16px);
     }
 
     100% {
@@ -48,18 +64,12 @@
 
 .search-anim-item {
     opacity: 0;
-    display: flex;
-    flex-direction: column;
-    /* Stretch to fill grid row so inner height: 100% works */
-    animation: searchResultPop 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+    animation: searchResultPop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+    /* Must be full-height so the inner .video-card { height: 100% } fills the row */
+    height: 100%;
 }
 
-.video-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-    gap: 24px;
-}
-
+/* Empty / Error states */
 .empty-state {
     text-align: center;
     padding: 60px 20px;
@@ -82,21 +92,15 @@
     margin-bottom: 24px;
 }
 
-/* Mobile Responsiveness */
-@media (max-width: 768px) {
+/* ===========================
+   Mobile — max-width: 600px
+   =========================== */
+@media (max-width: 600px) {
     .video-grid {
-        grid-template-columns: repeat(2, 1fr) !important;
-        gap: 12px;
-        align-items: stretch !important;
-    }
-
-    /* The animation wrapper <div> inside the grid must be the exact same fixed height as the card */
-    .video-grid>* {
-        display: flex !important;
-        flex-direction: column !important;
-        height: 240px !important;
-        max-height: 240px !important;
-        overflow: hidden;
+        grid-template-columns: repeat(2, 1fr);
+        grid-auto-rows: 220px;
+        /* Strict fixed row height for small phones */
+        gap: 10px;
     }
 
     .home-header {
@@ -105,11 +109,22 @@
     }
 
     .home-header h2 {
-        font-size: 1.25rem;
+        font-size: 1.2rem;
     }
 
     .rank-info-badge {
         padding: 6px 12px;
         font-size: 0.75rem;
+    }
+}
+
+/* ===========================
+   Tablet — 601px to 768px
+   =========================== */
+@media (min-width: 601px) and (max-width: 768px) {
+    .video-grid {
+        grid-template-columns: repeat(2, 1fr);
+        grid-auto-rows: 260px;
+        gap: 14px;
     }
 }

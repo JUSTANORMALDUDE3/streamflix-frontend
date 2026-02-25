@@ -1,3 +1,7 @@
+/* ===========================
+   Video Card — Clean Rewrite
+   =========================== */
+
 .video-card {
     display: flex;
     flex-direction: column;
@@ -5,63 +9,57 @@
     border-radius: var(--border-radius-md);
     overflow: hidden;
     position: relative;
-    transition: transform var(--transition-normal), box-shadow var(--transition-normal), border-color var(--transition-fast);
     border: 1px solid var(--border-color);
     cursor: pointer;
+    width: 100%;
     height: 100%;
-    /* Force cards to stretch to fill grid row heights uniformly */
+    /* Fill the grid cell height set by grid-auto-rows */
+    transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
 }
 
 .video-card:hover {
-    transform: translateY(-8px);
-    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6);
+    transform: translateY(-4px);
+    box-shadow: 0 16px 32px rgba(0, 0, 0, 0.5);
     border-color: rgba(255, 255, 255, 0.15);
 }
 
+/* ---- Thumbnail ---- */
 .video-thumbnail-wrapper {
     position: relative;
     width: 100%;
-    padding-top: 56.25%;
-    /* 16:9 Aspect Ratio */
+    aspect-ratio: 16 / 9;
     overflow: hidden;
-    background: #000;
+    background: #111;
+    flex-shrink: 0;
 }
 
 .video-thumbnail {
     position: absolute;
-    top: 0;
-    left: 0;
+    inset: 0;
     width: 100%;
     height: 100%;
     object-fit: cover;
-    transition: transform var(--transition-slow);
+    transition: transform 0.3s ease;
 }
 
 .video-card:hover .video-thumbnail {
-    transform: scale(1.08);
+    transform: scale(1.05);
 }
 
 .locked-thumb {
-    filter: brightness(0.4) blur(3px);
+    filter: brightness(0.35) blur(2px);
 }
 
-.video-card:hover .locked-thumb {
-    filter: brightness(0.5) blur(2px);
-    transform: scale(1.02);
-}
-
+/* ---- Overlays ---- */
 .play-overlay {
     position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: rgba(0, 0, 0, 0.4);
+    inset: 0;
+    background: rgba(0, 0, 0, 0.35);
     display: flex;
     align-items: center;
     justify-content: center;
     opacity: 0;
-    transition: opacity var(--transition-fast);
+    transition: opacity 0.2s ease;
 }
 
 .video-card:hover .play-overlay {
@@ -73,108 +71,74 @@
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    background: rgba(0, 0, 0, 0.6);
+    background: rgba(0, 0, 0, 0.65);
     border-radius: 50%;
-    padding: 16px;
+    padding: 14px;
     display: flex;
-    justify-content: center;
     align-items: center;
-    color: var(--text-color);
+    justify-content: center;
+    color: #fff;
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
     border: 1px solid rgba(255, 255, 255, 0.1);
-    transition: transform var(--transition-fast);
+    transition: transform 0.2s ease;
 }
 
 .video-card:hover .locked-overlay {
-    transform: translate(-50%, -50%) scale(1.05);
+    transform: translate(-50%, -50%) scale(1.07);
 }
 
+/* ---- Info Panel ---- */
 .video-info {
-    padding: 16px;
+    padding: 10px 12px 14px;
     display: flex;
     flex-direction: column;
     flex: 1;
-    /* Stretch to fill parent height */
-    justify-content: space-between;
-    /* Push meta data to bottom */
-    gap: 8px;
+    overflow: hidden;
+    gap: 6px;
 }
 
 .video-title {
-    font-size: 1.1rem;
+    font-size: 0.95rem;
     font-weight: 600;
     color: var(--text-main);
     margin: 0;
     line-height: 1.4;
-    height: 2.8em;
-    min-height: 2.8em;
-    /* Strict minimum to ensure single lines don't collapse grid symmetry */
+    /* Two-line clamp */
     display: -webkit-box;
     -webkit-line-clamp: 2;
-    line-clamp: 2;
     -webkit-box-orient: vertical;
     overflow: hidden;
-    text-overflow: ellipsis;
 }
 
-
-.mt-2 {
-    margin-top: 8px;
+/* Pushes the meta row to the bottom of the info panel */
+.video-meta {
+    margin-top: auto;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 6px;
 }
 
 .rank-tag {
-    font-size: 0.7rem;
+    font-size: 0.65rem;
     font-weight: 700;
     padding: 2px 8px;
     border-radius: 4px;
     letter-spacing: 0.5px;
+    text-transform: uppercase;
 }
 
 .upload-date {
-    font-size: 0.8rem;
+    font-size: 0.72rem;
     color: var(--text-muted);
 }
 
+/* ---- Bottom rank colour bar ---- */
 .card-indicator {
     position: absolute;
     bottom: 0;
     left: 0;
     width: 100%;
-    height: 4px;
-}
-
-/* === MOBILE: Hard-fixed card heights to guarantee 100% equal grid cells === */
-@media (max-width: 768px) {
-    .video-card {
-        height: 240px !important;
-    }
-
-    .video-thumbnail-wrapper {
-        height: 130px !important;
-        padding-top: 0 !important;
-        /* Override the percentage padding trick */
-        flex-shrink: 0;
-    }
-
-    .video-info {
-        padding: 10px 12px !important;
-        overflow: hidden;
-    }
-
-    .video-title {
-        font-size: 0.85rem !important;
-        height: auto !important;
-        min-height: unset !important;
-        -webkit-line-clamp: 2 !important;
-        max-height: 2.5em !important;
-        overflow: hidden !important;
-    }
-
-    .rank-tag {
-        font-size: 0.65rem !important;
-    }
-
-    .upload-date {
-        font-size: 0.65rem !important;
-    }
+    height: 3px;
 }
