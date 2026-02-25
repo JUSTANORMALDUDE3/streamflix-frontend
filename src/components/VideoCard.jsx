@@ -43,7 +43,7 @@ const VideoCard = ({ video }) => {
             </div>
             <div className="video-info">
                 <h3 className="video-title" title={video.title}>{video.title}</h3>
-                <div className="video-meta flex-row ai-center jc-between mt-2" style={{ flexWrap: 'wrap', gap: '8px' }}>
+                <div className="video-meta flex-row ai-center jc-between mt-2" style={{ flexWrap: 'wrap', gap: '8px', marginTop: 'auto' }}>
                     <span className={`rank-tag rank-${video.rank}`}>
                         {video.rank.toUpperCase()}
                     </span>
