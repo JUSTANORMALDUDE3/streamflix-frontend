@@ -90,11 +90,13 @@
         align-items: stretch !important;
     }
 
-    /* The animation wrapper <div> inside the grid must also stretch */
+    /* The animation wrapper <div> inside the grid must be the exact same fixed height as the card */
     .video-grid>* {
         display: flex !important;
         flex-direction: column !important;
-        height: 100%;
+        height: 240px !important;
+        max-height: 240px !important;
+        overflow: hidden;
     }
 
     .home-header {
