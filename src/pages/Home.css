@@ -48,6 +48,9 @@
 
 .search-anim-item {
     opacity: 0;
+    display: flex;
+    flex-direction: column;
+    /* Stretch to fill grid row so inner height: 100% works */
     animation: searchResultPop 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
 }
 
@@ -84,6 +87,14 @@
     .video-grid {
         grid-template-columns: repeat(2, 1fr) !important;
         gap: 12px;
+        align-items: stretch !important;
+    }
+
+    /* The animation wrapper <div> inside the grid must also stretch */
+    .video-grid>* {
+        display: flex !important;
+        flex-direction: column !important;
+        height: 100%;
     }
 
     .home-header {
