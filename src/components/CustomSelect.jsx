@@ -61,7 +61,7 @@ const CustomSelect = ({ options, value, onChange }) => {
                     <div className="custom-select-options-list">
                         {filteredOptions.length > 0 ? filteredOptions.map((option) => (
                             <div
-                                key={option}
+                                key={option.value}
                                 className={`custom-select-option ${option.value === value ? 'selected' : ''}`}
                                 onClick={() => handleSelect(option.value)}
                             >

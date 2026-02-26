@@ -1,0 +1,136 @@
+/* =============================
+   Admin Drive Scanner — Layout
+   ============================= */
+
+.ds-scan-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 28px;
+    font-size: 0.95rem;
+}
+
+.ds-spin {
+    animation: dsSpin 0.85s linear infinite;
+}
+
+@keyframes dsSpin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* ─── Two-column wrapper ────────────────────────── */
+.ds-two-col {
+    display: grid;
+    grid-template-columns: 340px 1fr;
+    gap: 24px;
+    align-items: start;
+}
+
+@media (max-width: 900px) {
+    .ds-two-col {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* ─── Left: File list panel ─────────────────────── */
+.ds-file-list {
+    background: var(--surface-color);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius-md);
+    overflow: hidden;
+}
+
+.ds-list-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 16px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--text-muted);
+    background: rgba(255, 255, 255, 0.03);
+    border-bottom: 1px solid var(--border-color);
+}
+
+/* Each detected file row */
+.ds-file-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+    padding: 14px 16px;
+    background: transparent;
+    border: none;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+    text-align: left;
+    cursor: pointer;
+    color: var(--text-main);
+    transition: background 0.15s;
+}
+
+.ds-file-row:last-child {
+    border-bottom: none;
+}
+
+.ds-file-row:hover:not(:disabled) {
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.ds-file-row--active {
+    background: rgba(99, 102, 241, 0.1) !important;
+    border-left: 3px solid var(--primary-color);
+}
+
+.ds-file-row--done {
+    opacity: 0.5;
+    cursor: default;
+}
+
+.ds-file-icon {
+    flex-shrink: 0;
+    color: var(--text-muted);
+}
+
+.ds-file-meta {
+    flex: 1;
+    min-width: 0;
+}
+
+.ds-file-name {
+    display: block;
+    font-size: 0.88rem;
+    font-weight: 500;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin-bottom: 4px;
+}
+
+.ds-file-sub {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+/* ─── Right: Form placeholder ───────────────────── */
+.ds-form-panel {
+    /* Takes remaining width */
+}
+
+.ds-form-placeholder {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 60px 20px;
+    text-align: center;
+    background: var(--surface-color);
+    border: 1px dashed var(--border-color);
+    border-radius: var(--border-radius-md);
+    color: var(--text-muted);
+    font-size: 0.9rem;
+}

@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { UploadCloud, Users, HardDrive, Video, Key } from 'lucide-react';
+import { UploadCloud, Users, HardDrive, Video, Key, ScanSearch } from 'lucide-react';
 import './Admin.css';
 
 const AdminDashboard = () => {
@@ -40,6 +40,14 @@ const AdminDashboard = () => {
                     </div>
                     <h3>Manage Tokens</h3>
                     <p>Generate, monitor, and revoke single-use secure downloads.</p>
+                </Link>
+
+                <Link to="/admin/drive-scanner" className="admin-card glass">
+                    <div className="admin-icon-wrapper" style={{ background: 'rgba(139, 92, 246, 0.1)', color: '#8b5cf6' }}>
+                        <ScanSearch size={32} />
+                    </div>
+                    <h3>Drive Scanner</h3>
+                    <p>Detect unregistered Drive videos and add them to the platform.</p>
                 </Link>
 
                 {/* This link directs to the backend API endpoint for Drive Auth directly because it's OAuth */}

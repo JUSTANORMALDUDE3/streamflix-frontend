@@ -1,11 +1,12 @@
 import React from 'react';
+import ReactDOM from 'react-dom';
 import { AlertTriangle, X } from 'lucide-react';
 import './ConfirmModal.css';
 
 const ConfirmModal = ({ isOpen, onClose, onConfirm, title, message, isLoading }) => {
     if (!isOpen) return null;
 
-    return (
+    return ReactDOM.createPortal(
         <div className="modal-overlay">
             <div className="modal-content glass flex-column gap-3">
                 <div className="modal-header flex-row ai-center jc-between">
@@ -36,7 +37,8 @@ const ConfirmModal = ({ isOpen, onClose, onConfirm, title, message, isLoading })
                     </button>
                 </div>
             </div>
-        </div>
+        </div>,
+        document.body
     );
 };
 
