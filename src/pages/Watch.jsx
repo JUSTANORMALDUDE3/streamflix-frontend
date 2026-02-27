@@ -475,6 +475,27 @@ const Watch = () => {
                 <div className="watch-description">
                     <h3>Description</h3>
                     <p>{video.description || 'No description provided for this video.'}</p>
+                    {video.hashtags && video.hashtags.length > 0 && (
+                        <div className="hashtags flex-row mt-3" style={{ flexWrap: 'wrap', gap: '8px' }}>
+                            {video.hashtags.map(tag => (
+                                <span
+                                    key={tag}
+                                    className="hashtag"
+                                    onClick={() => navigate(`/?search=${encodeURIComponent(tag.replace('#', ''))}`)}
+                                    style={{
+                                        color: '#3b82f6', // blue accent
+                                        cursor: 'pointer',
+                                        textDecoration: 'none',
+                                        fontWeight: '500'
+                                    }}
+                                    onMouseEnter={e => e.target.style.textDecoration = 'underline'}
+                                    onMouseLeave={e => e.target.style.textDecoration = 'none'}
+                                >
+                                    {tag}
+                                </span>
+                            ))}
+                        </div>
+                    )}
                 </div>
             </div>
 

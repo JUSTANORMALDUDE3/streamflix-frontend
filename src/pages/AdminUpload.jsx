@@ -15,6 +15,7 @@ const AdminUpload = () => {
     const [title, setTitle] = useState('');
     const [description, setDescription] = useState('');
     const [rank, setRank] = useState('free');
+    const [tags, setTags] = useState('');
     const [thumbnailUrl, setThumbnailUrl] = useState('');
     const [videoFile, setVideoFile] = useState(null);
     const [generatedThumbnail, setGeneratedThumbnail] = useState(null); // Base64 or Blob
@@ -96,6 +97,7 @@ const AdminUpload = () => {
         formData.append('title', title);
         formData.append('description', description);
         formData.append('rank', rank);
+        formData.append('tags', tags);
 
         // Use external URL if provided, otherwise send the generated base64
         if (thumbnailUrl) {
@@ -119,6 +121,7 @@ const AdminUpload = () => {
             setTitle('');
             setDescription('');
             setRank('free');
+            setTags('');
             setThumbnailUrl('');
             setVideoFile(null);
             setGeneratedThumbnail(null);
@@ -161,6 +164,17 @@ const AdminUpload = () => {
                             rows="4"
                             value={description}
                             onChange={e => setDescription(e.target.value)}
+                        />
+                    </div>
+
+                    <div className="form-group">
+                        <label>Tags (comma separated)</label>
+                        <input
+                            type="text"
+                            className="input-field"
+                            value={tags}
+                            onChange={e => setTags(e.target.value)}
+                            placeholder="e.g. action, thriller, 2024"
                         />
                     </div>
 
