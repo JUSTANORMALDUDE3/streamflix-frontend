@@ -1,11 +1,29 @@
-import React from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Play, Eye, Lock } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import './VideoCard.css';
 
+// Hook: returns true when the ref enters the viewport
+const useInView = (ref, rootMargin = '200px') => {
+    const [inView, setInView] = useState(false);
+    useEffect(() => {
+        const el = ref.current;
+        if (!el) return;
+        const obs = new IntersectionObserver(([entry]) => {
+            if (entry.isIntersecting) { setInView(true); obs.disconnect(); }
+        }, { rootMargin });
+        obs.observe(el);
+        return () => obs.disconnect();
+    }, [ref, rootMargin]);
+    return inView;
+};
+
 const VideoCard = ({ video }) => {
     const { user } = useAuth();
+    const imgRef = useRef(null);
+    const inView = useInView(imgRef);
+    const [loaded, setLoaded] = useState(false);
 
     // Calculate if video is locked for this user
     const rankMapper = { 'top': 3, 'middle': 2, 'free': 1 };
@@ -24,13 +42,20 @@ const VideoCard = ({ video }) => {
 
     return (
         <Link to={`/watch/${video._id}`} className="video-card">
-            <div className="video-thumbnail-wrapper">
-                <img
-                    src={video.thumbnailUrl || 'https://via.placeholder.com/640x360.png?text=No+Thumbnail'}
-                    alt={video.title}
-                    className={`video-thumbnail ${isLocked ? 'locked-thumb' : ''}`}
-                />
-
+            <div className="video-thumbnail-wrapper" ref={imgRef}>
+                {/* Skeleton placeholder while not in view or loading */}
+                {(!inView || !loaded) && (
+                    <div className="video-thumb-skeleton" style={{ position: 'absolute', inset: 0, background: 'rgba(255,255,255,0.04)', borderRadius: '8px 8px 0 0' }} />
+                )}
+                {inView && (
+                    <img
+                        src={video.thumbnailUrl || 'https://via.placeholder.com/640x360.png?text=No+Thumbnail'}
+                        alt={video.title}
+                        className={`video-thumbnail ${isLocked ? 'locked-thumb' : ''}`}
+                        onLoad={() => setLoaded(true)}
+                        style={{ opacity: loaded ? 1 : 0, transition: 'opacity 0.4s ease' }}
+                    />
+                )}
                 {isLocked ? (
                     <div className="locked-overlay">
                         <Lock size={32} fill="currentColor" />

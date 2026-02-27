@@ -28,6 +28,8 @@ const Watch = () => {
     const canvasRef = useRef(null);
     const playerWrapperRef = useRef(null);
     const controlsTimeoutRef = useRef(null);
+    const analyticsTimerRef = useRef(null);
+    const hasFiredAnalytics = useRef(false);
 
     const [isPlaying, setIsPlaying] = useState(true);
     const [progress, setProgress] = useState(0);
@@ -38,6 +40,29 @@ const Watch = () => {
     const [showControls, setShowControls] = useState(true);
     const [isFullScreen, setIsFullScreen] = useState(false);
     const [isBuffering, setIsBuffering] = useState(true);
+
+    // -- Analytics: fire view event once after 10s of playback -----------
+    useEffect(() => {
+        const vid = videoRef.current;
+        if (!vid || !video) return;
+        let timer = null;
+        const handlePlay = () => {
+            if (hasFiredAnalytics.current) return;
+            timer = setTimeout(() => {
+                hasFiredAnalytics.current = true;
+                const watchTime = Math.round(vid.currentTime || 0);
+                axios.post('/analytics/view', { videoId: video._id, watchTime }).catch(() => { });
+            }, 10000);
+        };
+        const handlePause = () => { clearTimeout(timer); timer = null; };
+        vid.addEventListener('play', handlePlay);
+        vid.addEventListener('pause', handlePause);
+        return () => {
+            vid.removeEventListener('play', handlePlay);
+            vid.removeEventListener('pause', handlePause);
+            clearTimeout(timer);
+        };
+    }, [video]);
 
     useEffect(() => {
         const fetchVideo = async () => {
@@ -131,15 +156,8 @@ const Watch = () => {
             </div>
         );
     }
-    // Generate Stream URL — for upload-type videos
+    // Stream URL for the custom video player
     const streamUrl = `${import.meta.env.VITE_API_URL}/videos/stream/${video?._id || ''}`;
-
-    // For embed-type: if the src is a direct video file, use the custom player
-    const DIRECT_VIDEO_EXTS = /\.(mp4|webm|ogg|ogv|m3u8|mov)(\?.*)?$/i;
-    const embedSrc = video?.embed?.src || '';
-    const isDirectVideoEmbed = video?.type === 'embed' && DIRECT_VIDEO_EXTS.test(embedSrc);
-    // Source for the video element:  upload → streamUrl, direct embed → embedSrc
-    const playerSrc = video?.type === 'embed' ? embedSrc : streamUrl;
 
     const formatTime = (time) => {
         if (isNaN(time)) return '0:00';
@@ -317,97 +335,82 @@ const Watch = () => {
             >
                 {!isLocked ? (
                     <>
-                        {/* ── Embed (iframe) player — only for true iframe embeds ── */}
-                        {video.type === 'embed' && !isDirectVideoEmbed ? (
-                            <div className="embed-player-wrapper">
-                                <iframe
-                                    src={video.embed?.src}
-                                    title={video.title}
-                                    allow="autoplay; fullscreen; picture-in-picture"
-                                    allowFullScreen
-                                    style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', border: 'none' }}
-                                />
+                        <video
+                            ref={videoRef}
+                            autoPlay
+                            onClick={handleVideoClick}
+                            onTimeUpdate={handleTimeUpdate}
+                            onLoadedMetadata={handleLoadedMetadata}
+                            onPlay={() => setIsPlaying(true)}
+                            onPause={() => setIsPlaying(false)}
+                            onWaiting={() => setIsBuffering(true)}
+                            onPlaying={() => setIsBuffering(false)}
+                            onCanPlay={() => setIsBuffering(false)}
+                            controlsList="nodownload"
+                            onContextMenu={(e) => e.preventDefault()}
+                            className="video-player"
+                            poster={video.thumbnailUrl}
+                        >
+                            <source src={streamUrl} type="video/mp4" />
+                            Your browser does not support HTML video.
+                        </video>
+
+                        {skipAction === 'backward' && (
+                            <div className="skip-indicator skip-left">
+                                <Rewind size={40} fill="currentColor" />
+                                <span>-10s</span>
                             </div>
-                        ) : (
-                            <>
-                                <video
-                                    ref={videoRef}
-                                    autoPlay
-                                    onClick={handleVideoClick}
-                                    onTimeUpdate={handleTimeUpdate}
-                                    onLoadedMetadata={handleLoadedMetadata}
-                                    onPlay={() => setIsPlaying(true)}
-                                    onPause={() => setIsPlaying(false)}
-                                    onWaiting={() => setIsBuffering(true)}
-                                    onPlaying={() => setIsBuffering(false)}
-                                    onCanPlay={() => setIsBuffering(false)}
-                                    controlsList="nodownload"
-                                    onContextMenu={(e) => e.preventDefault()}
-                                    className="video-player"
-                                    poster={video.thumbnailUrl}
-                                >
-                                    <source src={playerSrc} type="video/mp4" />
-                                    Your browser does not support HTML video.
-                                </video>
+                        )}
+                        {skipAction === 'forward' && (
+                            <div className="skip-indicator skip-right">
+                                <FastForward size={40} fill="currentColor" />
+                                <span>+10s</span>
+                            </div>
+                        )}
 
-                                {skipAction === 'backward' && (
-                                    <div className="skip-indicator skip-left">
-                                        <Rewind size={40} fill="currentColor" />
-                                        <span>-10s</span>
-                                    </div>
-                                )}
-                                {skipAction === 'forward' && (
-                                    <div className="skip-indicator skip-right">
-                                        <FastForward size={40} fill="currentColor" />
-                                        <span>+10s</span>
-                                    </div>
-                                )}
+                        {isBuffering && (
+                            <div className="video-buffering-overlay">
+                                <div className="video-spinner"></div>
+                            </div>
+                        )}
 
-                                {isBuffering && (
-                                    <div className="video-buffering-overlay">
-                                        <div className="video-spinner"></div>
-                                    </div>
-                                )}
+                        <div className={`video-controls-overlay ${showControls || !isPlaying ? 'active' : ''}`}>
+                            <div className="progress-container" onClick={handleProgressScrub}>
+                                <div className="progress-filled" style={{ width: `${progress}%` }}></div>
+                            </div>
 
-                                <div className={`video-controls-overlay ${showControls || !isPlaying ? 'active' : ''}`}>
-                                    <div className="progress-container" onClick={handleProgressScrub}>
-                                        <div className="progress-filled" style={{ width: `${progress}%` }}></div>
+                            <div className="control-bar">
+                                <div className="control-group">
+                                    <button className="control-btn" onClick={togglePlay} title={isPlaying ? "Pause" : "Play"}>
+                                        {isPlaying ? <Pause fill="currentColor" size={24} /> : <Play fill="currentColor" size={24} />}
+                                    </button>
+
+                                    <div className="volume-container">
+                                        <button className="control-btn" onClick={toggleMute} title={isMuted ? "Unmute" : "Mute"}>
+                                            {isMuted || volume === 0 ? <VolumeX size={20} /> : <Volume2 size={20} />}
+                                        </button>
+                                        <input
+                                            type="range"
+                                            min="0" max="1" step="0.05"
+                                            className="volume-slider"
+                                            value={isMuted ? 0 : volume}
+                                            onChange={handleVolumeChange}
+                                            style={{ background: `linear-gradient(to right, var(--primary-color) ${(isMuted ? 0 : volume) * 100}%, rgba(255,255,255,0.3) ${(isMuted ? 0 : volume) * 100}%)` }}
+                                        />
                                     </div>
 
-                                    <div className="control-bar">
-                                        <div className="control-group">
-                                            <button className="control-btn" onClick={togglePlay} title={isPlaying ? "Pause" : "Play"}>
-                                                {isPlaying ? <Pause fill="currentColor" size={24} /> : <Play fill="currentColor" size={24} />}
-                                            </button>
-
-                                            <div className="volume-container">
-                                                <button className="control-btn" onClick={toggleMute} title={isMuted ? "Unmute" : "Mute"}>
-                                                    {isMuted || volume === 0 ? <VolumeX size={20} /> : <Volume2 size={20} />}
-                                                </button>
-                                                <input
-                                                    type="range"
-                                                    min="0" max="1" step="0.05"
-                                                    className="volume-slider"
-                                                    value={isMuted ? 0 : volume}
-                                                    onChange={handleVolumeChange}
-                                                    style={{ background: `linear-gradient(to right, var(--primary-color) ${(isMuted ? 0 : volume) * 100}%, rgba(255,255,255,0.3) ${(isMuted ? 0 : volume) * 100}%)` }}
-                                                />
-                                            </div>
-
-                                            <div className="time-display">
-                                                {currentTime} / {duration}
-                                            </div>
-                                        </div>
-
-                                        <div className="control-group">
-                                            <button className="control-btn" onClick={toggleFullScreen} title="Fullscreen">
-                                                {isFullScreen ? <Minimize size={20} /> : <Maximize size={20} />}
-                                            </button>
-                                        </div>
+                                    <div className="time-display">
+                                        {currentTime} / {duration}
                                     </div>
                                 </div>
-                            </> /* end upload player fragment */
-                        )} /* end embed ternary */
+
+                                <div className="control-group">
+                                    <button className="control-btn" onClick={toggleFullScreen} title="Fullscreen">
+                                        {isFullScreen ? <Minimize size={20} /> : <Maximize size={20} />}
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
                     </> /* end isLocked=false fragment */
                 ) : (
                     <div className="mosaic-lock animate-fade-in">

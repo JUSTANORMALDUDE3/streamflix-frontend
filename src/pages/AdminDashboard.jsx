@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { UploadCloud, Users, HardDrive, Video, Key, ScanSearch, Code2 } from 'lucide-react';
+import { UploadCloud, Users, HardDrive, Video, Key, ScanSearch, Activity, BarChart2 } from 'lucide-react';
 import './Admin.css';
 
 const AdminDashboard = () => {
@@ -50,12 +50,20 @@ const AdminDashboard = () => {
                     <p>Detect unregistered Drive videos and add them to the platform.</p>
                 </Link>
 
-                <Link to="/admin/embed-video" className="admin-card glass">
-                    <div className="admin-icon-wrapper" style={{ background: 'rgba(6, 182, 212, 0.1)', color: '#06b6d4' }}>
-                        <Code2 size={32} />
+                <Link to="/admin/health" className="admin-card glass">
+                    <div className="admin-icon-wrapper" style={{ background: 'rgba(16, 185, 129, 0.08)', color: '#34d399' }}>
+                        <Activity size={32} />
                     </div>
-                    <h3>Embed Video</h3>
-                    <p>Paste any iframe embed code to add external videos to the platform.</p>
+                    <h3>System Health</h3>
+                    <p>View platform stats, missing thumbnails, and metadata issues.</p>
+                </Link>
+
+                <Link to="/admin/analytics" className="admin-card glass">
+                    <div className="admin-icon-wrapper" style={{ background: 'rgba(139, 92, 246, 0.08)', color: '#a78bfa' }}>
+                        <BarChart2 size={32} />
+                    </div>
+                    <h3>Analytics</h3>
+                    <p>Daily views, top videos, and watch time over 30 days.</p>
                 </Link>
 
                 {/* This link directs to the backend API endpoint for Drive Auth directly because it's OAuth */}

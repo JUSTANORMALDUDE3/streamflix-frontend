@@ -14,7 +14,8 @@ import AdminUserMgmt from './pages/AdminUserMgmt';
 import AdminVideoMgmt from './pages/AdminVideoMgmt';
 import AdminTokenMgmt from './pages/AdminTokenMgmt';
 import AdminDriveScanner from './pages/AdminDriveScanner';
-import AdminEmbedVideo from './pages/AdminEmbedVideo';
+import AdminHealthDashboard from './pages/AdminHealthDashboard';
+import AnalyticsDashboard from './pages/AnalyticsDashboard';
 
 // Layout
 import Navbar from './components/Navbar';
@@ -62,7 +63,8 @@ const App = () => {
         <Route path="/admin/videos" element={<ProtectedRoute adminOnly><AppLayout><AdminVideoMgmt /></AppLayout></ProtectedRoute>} />
         <Route path="/admin/tokens" element={<ProtectedRoute adminOnly><AppLayout><AdminTokenMgmt /></AppLayout></ProtectedRoute>} />
         <Route path="/admin/drive-scanner" element={<ProtectedRoute adminOnly><AppLayout><AdminDriveScanner /></AppLayout></ProtectedRoute>} />
-        <Route path="/admin/embed-video" element={<ProtectedRoute adminOnly><AppLayout><AdminEmbedVideo /></AppLayout></ProtectedRoute>} />
+        <Route path="/admin/health" element={<ProtectedRoute adminOnly><AppLayout><AdminHealthDashboard /></AppLayout></ProtectedRoute>} />
+        <Route path="/admin/analytics" element={<ProtectedRoute adminOnly><AppLayout><AnalyticsDashboard /></AppLayout></ProtectedRoute>} />
       </Routes>
     </Router>
   );
