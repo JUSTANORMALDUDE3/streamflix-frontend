@@ -10,11 +10,16 @@ const rankOptions = [
     { value: 'middle', label: 'Middle' },
     { value: 'top', label: 'Top' }
 ];
+const targetAccountOptions = [
+    { value: 'primary', label: 'Primary Drive' },
+    { value: 'fallback', label: 'Fallback Drive' }
+];
 
 const AdminUpload = () => {
     const [title, setTitle] = useState('');
     const [description, setDescription] = useState('');
     const [rank, setRank] = useState('free');
+    const [targetAccount, setTargetAccount] = useState('primary');
     const [tags, setTags] = useState('');
     const [thumbnailUrl, setThumbnailUrl] = useState('');
     const [videoFile, setVideoFile] = useState(null);
@@ -118,18 +123,21 @@ const AdminUpload = () => {
                     video.currentTime = seekTime;
                 });
 
-                URL.revokeObjectURL(objectUrl);
+                // We MUST not revoke immediately if we resolved successfully 
+                // because the blob might still be needed by the video element briefly,
+                // but for memory safety we revoke after a delay or on unmount.
+                setTimeout(() => URL.revokeObjectURL(objectUrl), 5000);
                 return dataURL; // Success, return image!
             } catch (err) {
                 if (err !== "SOLID_COLOR") {
-                    URL.revokeObjectURL(objectUrl);
+                    setTimeout(() => URL.revokeObjectURL(objectUrl), 1000);
                     return null; // Fatal error
                 }
                 // If solid color, loop repeats and tries a new timestamp
             }
         }
 
-        URL.revokeObjectURL(objectUrl);
+        setTimeout(() => URL.revokeObjectURL(objectUrl), 1000);
         return null;
     };
 
@@ -203,6 +211,7 @@ const AdminUpload = () => {
         formData.append('title', title);
         formData.append('description', description);
         formData.append('rank', rank);
+        formData.append('targetAccount', targetAccount);
         formData.append('tags', tags);
 
         // Use external URL if provided, otherwise send the generated base64
@@ -298,15 +307,24 @@ const AdminUpload = () => {
                             />
                         </div>
                         <div className="form-group" style={{ flex: 1 }}>
-                            <label>Optional Override Thumbnail URL</label>
-                            <input
-                                type="url"
-                                className="input-field"
-                                value={thumbnailUrl}
-                                onChange={e => setThumbnailUrl(e.target.value)}
-                                placeholder="Leaves blank to generate from video"
+                            <label>Upload Target Account *</label>
+                            <CustomSelect
+                                options={targetAccountOptions}
+                                value={targetAccount}
+                                onChange={e => setTargetAccount(e.target.value)}
                             />
                         </div>
+                    </div>
+
+                    <div className="form-group">
+                        <label>Optional Override Thumbnail URL</label>
+                        <input
+                            type="url"
+                            className="input-field"
+                            value={thumbnailUrl}
+                            onChange={e => setThumbnailUrl(e.target.value)}
+                            placeholder="Leaves blank to generate from video"
+                        />
                     </div>
 
                     <div className="form-group">

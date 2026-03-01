@@ -71,8 +71,16 @@ const AdminDashboard = () => {
                     <div className="admin-icon-wrapper orange">
                         <HardDrive size={32} />
                     </div>
-                    <h3>Drive Authorization</h3>
-                    <p>Generate Google Drive refresh tokens.</p>
+                    <h3>Primary Drive Auth</h3>
+                    <p>Generate Google Drive refresh token for main account.</p>
+                </a>
+
+                <a href={`${import.meta.env.VITE_API_URL}/admin/auth/drive?accountType=fallback`} className="admin-card glass" target="_blank" rel="noreferrer">
+                    <div className="admin-icon-wrapper orange">
+                        <HardDrive size={32} />
+                    </div>
+                    <h3>Fallback Drive Auth</h3>
+                    <p>Generate Google Drive refresh token for secondary account.</p>
                 </a>
             </div>
         </div>
