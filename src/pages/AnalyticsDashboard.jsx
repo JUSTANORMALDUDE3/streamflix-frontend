@@ -139,7 +139,7 @@ const AnalyticsDashboard = () => {
                                             <span style={{ width: 24, height: 24, borderRadius: '50%', background: 'rgba(99,102,241,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.75rem', fontWeight: 700, color: '#6366f1', flexShrink: 0 }}>
                                                 {i + 1}
                                             </span>
-                                            <img src={v.thumbnailUrl} alt="" style={{ width: 40, height: 28, objectFit: 'cover', borderRadius: '4px', background: '#111' }} onError={e => e.target.style.display = 'none'} />
+                                            <img src={v.thumbnailUrl} alt="" style={{ width: 40, height: 28, objectFit: 'cover', borderRadius: '4px', background: '#111' }} onError={e => e.target.style.display = 'none'} referrerPolicy="no-referrer" />
                                             <span style={{ flex: 1, fontSize: '0.85rem' }}>{v.title}</span>
                                             <span style={{ fontSize: '0.82rem', color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>{v.views.toLocaleString()} views</span>
                                             <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>{formatWatchTime(v.totalWatchTime || 0)} watched</span>

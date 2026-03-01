@@ -2,6 +2,7 @@ import React, { useRef, useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Play, Eye, Lock } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import axios from 'axios';
 import './VideoCard.css';
 
 // Hook: returns true when the ref enters the viewport
@@ -40,8 +41,20 @@ const VideoCard = ({ video }) => {
         }
     };
 
+    const handlePrefetch = () => {
+        if (!isLocked) {
+            // Silently warm the browser and API cache
+            axios.get(`/videos/${video._id}`).catch(() => { });
+        }
+    };
+
     return (
-        <Link to={`/watch/${video._id}`} className="video-card">
+        <Link
+            to={`/watch/${video._id}`}
+            className="video-card"
+            onMouseEnter={handlePrefetch}
+            onTouchStart={handlePrefetch}
+        >
             <div className="video-thumbnail-wrapper" ref={imgRef}>
                 {/* Skeleton placeholder while not in view or loading */}
                 {(!inView || !loaded) && (
@@ -53,6 +66,10 @@ const VideoCard = ({ video }) => {
                         alt={video.title}
                         className={`video-thumbnail ${isLocked ? 'locked-thumb' : ''}`}
                         onLoad={() => setLoaded(true)}
+                        onError={(e) => {
+                            setLoaded(true);
+                        }}
+                        referrerPolicy="no-referrer"
                         style={{ opacity: loaded ? 1 : 0, transition: 'opacity 0.4s ease' }}
                     />
                 )}

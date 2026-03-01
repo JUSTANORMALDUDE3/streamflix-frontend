@@ -15,8 +15,8 @@ const Explore = () => {
         const fetchAndShuffleVideos = async () => {
             try {
                 const res = await axios.get('/videos');
-                // Fisher-Yates Shuffle Algorithm for true randomness
-                let shuffledArray = [...res.data];
+                // Since the videos route was converted to cursor-pagination, the array is in res.data.videos
+                let shuffledArray = [...res.data.videos];
                 for (let i = shuffledArray.length - 1; i > 0; i--) {
                     const j = Math.floor(Math.random() * (i + 1));
                     [shuffledArray[i], shuffledArray[j]] = [shuffledArray[j], shuffledArray[i]];

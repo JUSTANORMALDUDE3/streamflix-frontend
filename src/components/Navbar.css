@@ -15,11 +15,30 @@
     border-right: none;
 }
 
+.navbar-left {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    /* Spacing between hamburger and logo */
+}
+
 .logo-container {
     display: flex;
     align-items: center;
     gap: 12px;
     color: var(--text-main);
+    text-decoration: none;
+}
+
+.mobile-menu-btn {
+    display: flex;
+    background: transparent;
+    color: var(--text-main);
+    border: none;
+    padding: 8px;
+    cursor: pointer;
+    align-items: center;
+    justify-content: center;
 }
 
 .brand-icon {
@@ -155,7 +174,6 @@
     .brand-text {
         font-size: 1.2rem;
         display: none;
-        /* Hide text, just show icon on strict mobile to save searchbar space */
     }
 
     .navbar-center {

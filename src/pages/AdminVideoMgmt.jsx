@@ -180,7 +180,7 @@ const AdminVideoMgmt = () => {
 
                                     {/* Thumbnail */}
                                     <div style={{ width: '80px', height: '45px', borderRadius: '4px', overflow: 'hidden', background: '#000', flexShrink: 0 }}>
-                                        <img src={video.thumbnailUrl} alt={video.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} loading="lazy" />
+                                        <img src={video.thumbnailUrl} alt={video.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} loading="lazy" referrerPolicy="no-referrer" />
                                     </div>
 
                                     {/* Info */}

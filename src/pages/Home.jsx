@@ -55,6 +55,7 @@ const Home = () => {
     // Refetch when filters change
     useEffect(() => { fetchVideos({ reset: true }); }, [fetchVideos]);
 
+
     // IntersectionObserver to trigger next page
     useEffect(() => {
         const sentinel = sentinelRef.current;
@@ -93,6 +94,7 @@ const Home = () => {
                     <p>{searchQuery ? `No results match your search for "${searchQuery}".` : 'There are currently no videos available for this category.'}</p>
                 </div>
             )}
+
 
             <div className="video-grid">
                 {videos.map((video, index) => (

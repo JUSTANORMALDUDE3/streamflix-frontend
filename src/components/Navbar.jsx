@@ -2,10 +2,10 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useTheme, availableThemes } from '../context/ThemeContext';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
-import { LogOut, PlaySquare, Settings, Shield, Palette } from 'lucide-react';
+import { LogOut, PlaySquare, Settings, Shield, Palette, Menu } from 'lucide-react';
 import './Navbar.css';
 
-const Navbar = () => {
+const Navbar = ({ toggleMobileMenu }) => {
     const { user, logout } = useAuth();
     const { theme, setTheme } = useTheme();
     const [showThemeMenu, setShowThemeMenu] = useState(false);
@@ -58,6 +58,9 @@ const Navbar = () => {
     return (
         <nav className="navbar glass">
             <div className="navbar-left">
+                <button className="mobile-menu-btn" onClick={toggleMobileMenu} title="Menu">
+                    <Menu size={24} />
+                </button>
                 <Link to="/" className="logo-container">
                     <PlaySquare className="brand-icon" size={32} />
                     <span className="brand-text">StreamFlix</span>

@@ -20,37 +20,117 @@ const AdminUpload = () => {
     const [videoFile, setVideoFile] = useState(null);
     const [generatedThumbnail, setGeneratedThumbnail] = useState(null); // Base64 or Blob
 
+    const [duration, setDuration] = useState(0);
+    const [duplicateWarning, setDuplicateWarning] = useState(null);
+
     const [isUploading, setIsUploading] = useState(false);
     const [message, setMessage] = useState('');
     const [error, setError] = useState('');
 
-    const generateThumbnail = (file) => {
-        return new Promise((resolve) => {
-            const video = document.createElement('video');
-            const canvas = document.createElement('canvas');
-            const context = canvas.getContext('2d');
+    const generateThumbnail = async (file) => {
+        const video = document.createElement('video');
+        const canvas = document.createElement('canvas');
+        const context = canvas.getContext('2d');
+        const objectUrl = URL.createObjectURL(file);
 
-            video.src = URL.createObjectURL(file);
-            video.muted = true; // Required for auto-loading in some browsers
-            video.crossOrigin = "anonymous";
+        video.src = objectUrl;
+        video.muted = true;
+        video.crossOrigin = "anonymous";
+        video.setAttribute('playsinline', '');
+        video.preload = "metadata";
 
+        // Wait for metadata to load to get duration
+        await new Promise((resolve, reject) => {
+            let timeout = setTimeout(() => reject("Metadata timeout"), 3000);
             video.onloadedmetadata = () => {
-                // Seek to a random time in the video
-                video.currentTime = Math.random() * video.duration;
+                clearTimeout(timeout);
+                setDuration(video.duration || 0);
+                resolve();
             };
-
-            video.onseeked = () => {
-                canvas.width = video.videoWidth;
-                canvas.height = video.videoHeight;
-                context.drawImage(video, 0, 0, canvas.width, canvas.height);
-                const dataURL = canvas.toDataURL('image/jpeg', 0.8);
-                resolve(dataURL);
-            };
-
             video.onerror = () => {
-                resolve(null); // Ensure we don't hang forever
+                clearTimeout(timeout);
+                reject("Video error");
             };
-        });
+        }).catch(() => null);
+
+        const dur = video.duration || 0;
+        let attempt = 0;
+        const maxRetries = 5;
+
+        // Pick a random starting point each time Generate is called
+        let baseSeekTime = 1;
+        if (dur > 2) {
+            baseSeekTime = (0.05 + Math.random() * 0.8) * dur;
+        } else if (dur > 0) {
+            baseSeekTime = dur / 2;
+        }
+
+        // Try extracting a non-solid frame up to 5 times
+        while (attempt < maxRetries) {
+            attempt++;
+
+            // Increment seek time smoothly forward if repeating
+            let seekTime = baseSeekTime;
+            if (dur > 2) {
+                seekTime = Math.min(baseSeekTime + (attempt * 2), dur - 0.5);
+            } else if (dur > 0) {
+                seekTime = dur / 2;
+            }
+
+            try {
+                const dataURL = await new Promise((resolve, reject) => {
+                    let timeoutId = setTimeout(() => reject("Seek timeout"), 3000);
+
+                    video.onseeked = () => {
+                        clearTimeout(timeoutId);
+                        canvas.width = video.videoWidth || 1280;
+                        canvas.height = video.videoHeight || 720;
+                        context.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+                        // Pixel Variance Check for solid colors
+                        const frameData = context.getImageData(0, 0, canvas.width, canvas.height).data;
+                        let isSolid = true;
+                        if (frameData.length > 0) {
+                            const r = frameData[0], g = frameData[1], b = frameData[2];
+                            // Check every 400th pixel for performance to verify if color changes
+                            for (let i = 0; i < frameData.length; i += 400) {
+                                if (Math.abs(frameData[i] - r) > 5 ||
+                                    Math.abs(frameData[i + 1] - g) > 5 ||
+                                    Math.abs(frameData[i + 2] - b) > 5) {
+                                    isSolid = false;
+                                    break;
+                                }
+                            }
+                        }
+
+                        if (isSolid && attempt < maxRetries) {
+                            reject("SOLID_COLOR");
+                        } else {
+                            resolve(canvas.toDataURL('image/jpeg', 0.8));
+                        }
+                    };
+
+                    video.onerror = () => {
+                        clearTimeout(timeoutId);
+                        reject("Video error");
+                    };
+
+                    video.currentTime = seekTime;
+                });
+
+                URL.revokeObjectURL(objectUrl);
+                return dataURL; // Success, return image!
+            } catch (err) {
+                if (err !== "SOLID_COLOR") {
+                    URL.revokeObjectURL(objectUrl);
+                    return null; // Fatal error
+                }
+                // If solid color, loop repeats and tries a new timestamp
+            }
+        }
+
+        URL.revokeObjectURL(objectUrl);
+        return null;
     };
 
     const handleVideoChange = async (e) => {
@@ -68,6 +148,32 @@ const AdminUpload = () => {
             }
         }
     };
+
+    // Pre-flight validation watcher
+    React.useEffect(() => {
+        const checkDuplicate = async () => {
+            if (!title && !videoFile) return;
+            try {
+                const params = new URLSearchParams();
+                if (title) params.append('title', title);
+                if (videoFile) {
+                    params.append('originalFilename', videoFile.name);
+                    params.append('fileSize', videoFile.size);
+                }
+                const res = await axios.get(`/admin/videos/check-duplicate?${params.toString()}`);
+                if (res.data.duplicate) {
+                    setDuplicateWarning(`Warning: Possibe duplicate detected by ${res.data.reason}. Existing video: "${res.data.existingVideo.title}"`);
+                } else {
+                    setDuplicateWarning(null);
+                }
+            } catch (err) {
+                console.error("Duplicate pass-through ignored", err);
+            }
+        };
+
+        const debouncer = setTimeout(() => { checkDuplicate(); }, 600);
+        return () => clearTimeout(debouncer);
+    }, [title, videoFile]);
 
     const handleRegenerateThumbnail = async () => {
         if (!videoFile) return;
@@ -107,6 +213,9 @@ const AdminUpload = () => {
         }
 
         formData.append('video', videoFile);
+        formData.append('originalFilename', videoFile.name);
+        formData.append('fileSize', videoFile.size);
+        formData.append('duration', duration);
 
         try {
             await axios.post('/admin/upload', formData, {
@@ -143,6 +252,7 @@ const AdminUpload = () => {
 
             <div className="admin-card glass" style={{ maxWidth: '600px', margin: '0' }}>
                 {error && <div className="error-message">{error}</div>}
+                {duplicateWarning && <div style={{ color: '#d97706', padding: '16px', background: 'rgba(217, 119, 6, 0.1)', borderRadius: '12px', marginBottom: '16px', borderLeft: '4px solid #d97706' }}><strong>{duplicateWarning}</strong></div>}
                 {message && <div style={{ color: '#10b981', padding: '16px', background: 'rgba(16, 185, 129, 0.1)', borderRadius: '12px', marginBottom: '24px' }}>{message}</div>}
 
                 <form onSubmit={handleSubmit} className="flex-column gap-3">

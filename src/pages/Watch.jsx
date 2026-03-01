@@ -1,15 +1,21 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import axios from 'axios';
 import Loader from '../components/Loader';
-import { ArrowLeft, Clock, Shield, Play, Pause, Volume2, VolumeX, Maximize, Minimize, ThumbsUp, ThumbsDown, Eye, FastForward, Rewind, Download } from 'lucide-react';
+import { ArrowLeft, Clock, Shield, Play, Pause, Volume2, VolumeX, Maximize, Minimize, ThumbsUp, ThumbsDown, Eye, FastForward, Rewind, Download, ListPlus } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import TokenModal from '../components/TokenModal';
+import AddToPlaylistModal from '../components/AddToPlaylistModal';
+import KeyboardHelpModal from '../components/KeyboardHelpModal';
 import './Watch.css';
 
 const Watch = () => {
     const { id } = useParams();
     const navigate = useNavigate();
+    const [searchParams] = useSearchParams();
+    const playlistContextId = searchParams.get('playlist');
+    const [playlistVideos, setPlaylistVideos] = useState([]);
+
     const { user } = useAuth();
     const [video, setVideo] = useState(null);
     const [likeData, setLikeData] = useState({ likes: 0, dislikes: 0, isLiked: false, isDisliked: false });
@@ -21,8 +27,10 @@ const Watch = () => {
     const [error, setError] = useState('');
     const [lastTap, setLastTap] = useState(0);
     const [skipAction, setSkipAction] = useState(null);
-    const showTokenModal = false; // Note: Re-enable token logic as needed
-    const setShowTokenModal = () => { };
+
+    const [showPlaylistModal, setShowPlaylistModal] = useState(false);
+    const [showKeyboardHelp, setShowKeyboardHelp] = useState(false);
+    const [showTokenModal, setShowTokenModal] = useState(false);
 
     const videoRef = useRef(null);
     const canvasRef = useRef(null);
@@ -76,6 +84,8 @@ const Watch = () => {
                     isDisliked: res.data.dislikes?.includes(user?._id) || false,
                 });
                 setViewsCount(res.data.views || 0);
+
+
             } catch (err) {
                 setError('Video not found or you lack permission to view it.');
                 console.error(err);
@@ -84,7 +94,15 @@ const Watch = () => {
             }
         };
         fetchVideo();
-    }, [id]);
+
+        // ── Fetch playlist context for Autoplay Next ──────────────────────
+        if (playlistContextId) {
+            axios.get(`/playlists/${playlistContextId}`)
+                .then(res => setPlaylistVideos(res.data.data.videos))
+                .catch(err => console.error('Failed to load playlist context', err));
+        }
+
+    }, [id, playlistContextId, user]);
 
     useEffect(() => {
         const handleFullscreenChange = () => {
@@ -143,6 +161,73 @@ const Watch = () => {
         }
     }, [isLocked, video?.thumbnailUrl]);
 
+    // -- Progress Auto-Save Polling ---------------------------------------
+    useEffect(() => {
+        if (!video || !videoRef.current || !user || isLocked) return;
+
+        const interval = setInterval(() => {
+            const current = videoRef.current.currentTime;
+            const dur = videoRef.current.duration;
+            if (isPlaying && current > 0 && dur > 0) {
+                axios.post('/progress/save', {
+                    videoId: video._id,
+                    progressSeconds: current,
+                    duration: dur
+                }).catch(() => { });
+            }
+        }, 10000);
+
+        return () => clearInterval(interval);
+    }, [video, isPlaying, user, isLocked]);
+
+    useEffect(() => {
+        const handleKeyDown = (e) => {
+            const tag = document.activeElement?.tagName?.toLowerCase();
+            if (tag === 'input' || tag === 'textarea') return;
+
+            switch (e.key.toLowerCase()) {
+                case ' ':
+                case 'k':
+                    e.preventDefault();
+                    togglePlay();
+                    break;
+                case 'arrowleft':
+                case 'j':
+                    e.preventDefault();
+                    handleSkip(-10);
+                    break;
+                case 'arrowright':
+                case 'l':
+                    e.preventDefault();
+                    handleSkip(10);
+                    break;
+                case 'f':
+                    e.preventDefault();
+                    toggleFullScreen();
+                    break;
+                case 'm':
+                    e.preventDefault();
+                    handleMuteToggle();
+                    break;
+                case 'n':
+                    e.preventDefault();
+                    handleVideoEnded();
+                    break;
+                case '?':
+                    if (e.shiftKey) {
+                        e.preventDefault();
+                        setShowKeyboardHelp(prev => !prev);
+                    }
+                    break;
+                default:
+                    break;
+            }
+        };
+
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    });
+
     if (loading) return <Loader fullScreen={false} />;
 
     if (error || !video) {
@@ -178,26 +263,30 @@ const Watch = () => {
         }
     };
 
+    const handleSkip = (seconds) => {
+        if (videoRef.current) {
+            const newTime = Math.max(0, Math.min(videoRef.current.currentTime + seconds, videoRef.current.duration || 0));
+            videoRef.current.currentTime = newTime;
+            setSkipAction(seconds > 0 ? 'forward' : 'backward');
+            setTimeout(() => setSkipAction(null), 500);
+        }
+    };
+
     const handleVideoClick = (e) => {
         const now = Date.now();
         const DOUBLE_TAP_DELAY = 300;
 
         if (now - lastTap < DOUBLE_TAP_DELAY) {
-            togglePlay(); // Reverse the single-tap play/pause effect
-
             const rect = videoRef.current.getBoundingClientRect();
             const clientX = e.clientX || (e.nativeEvent && e.nativeEvent.touches && e.nativeEvent.touches[0].clientX) || 0;
             const clickX = clientX - rect.left;
 
             if (clickX > rect.width / 2) {
-                videoRef.current.currentTime = Math.min(videoRef.current.currentTime + 10, videoRef.current.duration || 0);
-                setSkipAction('forward');
+                handleSkip(10);
             } else {
-                videoRef.current.currentTime = Math.max(videoRef.current.currentTime - 10, 0);
-                setSkipAction('backward');
+                handleSkip(-10);
             }
 
-            setTimeout(() => setSkipAction(null), 500);
             setLastTap(0);
         } else {
             togglePlay();
@@ -218,13 +307,17 @@ const Watch = () => {
                 axios.post(`/videos/${id}/view`)
                     .then(res => setViewsCount(res.data.views))
                     .catch(console.error);
+
+
             }
         }
     };
 
     const handleLoadedMetadata = () => {
         if (videoRef.current) {
-            setDuration(formatTime(videoRef.current.duration));
+            const dur = videoRef.current.duration;
+            setDuration(formatTime(dur));
+
         }
     };
 
@@ -246,11 +339,11 @@ const Watch = () => {
         }
     };
 
-    const toggleMute = () => {
+    const handleMuteToggle = () => {
         if (videoRef.current) {
-            videoRef.current.muted = !isMuted;
-            setIsMuted(!isMuted);
-            if (isMuted && volume === 0) setVolume(1);
+            videoRef.current.muted = !videoRef.current.muted;
+            setIsMuted(videoRef.current.muted);
+            if (videoRef.current.muted && volume === 0) setVolume(1);
         }
     };
 
@@ -259,6 +352,17 @@ const Watch = () => {
             playerWrapperRef.current.requestFullscreen().catch(err => console.error(err));
         } else {
             document.exitFullscreen();
+        }
+    };
+
+    const handleVideoEnded = () => {
+        // Auto-Play Next logic if in a playlist
+        if (playlistContextId && playlistVideos.length > 0) {
+            const currentIndex = playlistVideos.findIndex(v => v._id === id);
+            if (currentIndex !== -1 && currentIndex + 1 < playlistVideos.length) {
+                const nextVideoId = playlistVideos[currentIndex + 1]._id;
+                navigate(`/watch/${nextVideoId}?playlist=${playlistContextId}`);
+            }
         }
     };
 
@@ -346,6 +450,7 @@ const Watch = () => {
                             onWaiting={() => setIsBuffering(true)}
                             onPlaying={() => setIsBuffering(false)}
                             onCanPlay={() => setIsBuffering(false)}
+                            onEnded={handleVideoEnded}
                             controlsList="nodownload"
                             onContextMenu={(e) => e.preventDefault()}
                             className="video-player"
@@ -386,7 +491,7 @@ const Watch = () => {
                                     </button>
 
                                     <div className="volume-container">
-                                        <button className="control-btn" onClick={toggleMute} title={isMuted ? "Unmute" : "Mute"}>
+                                        <button className="control-btn" onClick={handleMuteToggle} title={isMuted ? "Unmute (m)" : "Mute (m)"}>
                                             {isMuted || volume === 0 ? <VolumeX size={20} /> : <Volume2 size={20} />}
                                         </button>
                                         <input
@@ -467,6 +572,14 @@ const Watch = () => {
                             <Download size={18} />
                             <span>Download</span>
                         </button>
+                        <button
+                            className="btn-action flex-row ai-center gap-2"
+                            onClick={() => setShowPlaylistModal(true)}
+                            title="Save to Playlist"
+                        >
+                            <ListPlus size={18} />
+                            <span>Save</span>
+                        </button>
                     </div>
                 </div>
 
@@ -504,6 +617,15 @@ const Watch = () => {
                     <TokenModal videoId={id} onClose={() => setShowTokenModal(false)} />
                 )
             }
+            <AddToPlaylistModal
+                isOpen={showPlaylistModal}
+                onClose={() => setShowPlaylistModal(false)}
+                videoId={id}
+            />
+            <KeyboardHelpModal
+                isOpen={showKeyboardHelp}
+                onClose={() => setShowKeyboardHelp(false)}
+            />
         </div >
     );
 };
