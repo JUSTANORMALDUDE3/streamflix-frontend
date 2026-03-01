@@ -29,22 +29,16 @@ body.theme-dark {
 /* Papaya Whip Theme */
 body.theme-papaya {
   --bg-color: #FFEFD6;
-  /* Papaya Whip */
   --surface-color: #ffffff;
   --surface-hover: #FBC9E4;
-  /* Fresh Baby Pink */
 
   --primary-color: #ED7B8D;
-  /* Tender Rose */
   --primary-hover: #FFA3C3;
-  /* Smooth Pink */
 
   --text-main: #4a4a4a;
   --text-muted: #999D55;
-  /* Deep Sage */
   --border-color: rgba(0, 0, 0, 0.08);
 
-  /* Playful subtle ranks for this theme */
   --rank-top-bg: linear-gradient(135deg, #ED7B8D, #FFA3C3);
   --rank-middle-bg: linear-gradient(135deg, #FBC9E4, #ffb3d9);
   --rank-free-bg: linear-gradient(135deg, #999D55, #888d44);
@@ -60,21 +54,15 @@ body.theme-papaya {
 /* Nature Theme */
 body.theme-nature {
   --bg-color: #3C493F;
-  /* Dark Green */
   --surface-color: #7E8D85;
-  /* Medium Green */
   --surface-hover: #5A6660;
-  /* Darker shade of Medium Green for hover */
 
   --primary-color: #A2E3C4;
-  /* Bright Mint Green */
   --primary-hover: #F0F7F4;
-  /* Very Light Mint */
 
   --text-main: #F0F7F4;
   --text-muted: #B3BFB8;
   --border-color: rgba(179, 191, 184, 0.3);
-  /* B3BFB8 with opacity */
 
   --rank-top-bg: linear-gradient(135deg, #A2E3C4, #7E8D85);
   --rank-middle-bg: linear-gradient(135deg, #B3BFB8, #7E8D85);
@@ -85,22 +73,29 @@ body.theme-nature {
   --rank-free-text: #3C493F;
 
   --glass-bg: rgba(126, 141, 133, 0.4);
-  /* 7E8D85 with opacity */
   --glass-border: rgba(162, 227, 196, 0.2);
-  /* A2E3C4 with opacity */
 }
 
 :root {
   /* Layout */
   --sidebar-width: 240px;
   --navbar-height: 70px;
+  --border-radius-sm: 8px;
   --border-radius-md: 12px;
   --border-radius-lg: 20px;
 
-  /* Transitions */
+  /* Transitions — spring-physics curves */
+  --transition-micro: 0.15s cubic-bezier(0.22, 1, 0.36, 1);
   --transition-fast: 0.3s cubic-bezier(0.16, 1, 0.3, 1);
   --transition-normal: 0.5s cubic-bezier(0.16, 1, 0.3, 1);
   --transition-slow: 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+  --spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+
+  /* Shadows — elevation system */
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.15);
+  --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.25);
+  --shadow-lg: 0 16px 48px rgba(0, 0, 0, 0.4);
+  --shadow-glow: 0 0 20px rgba(99, 102, 241, 0.3);
 }
 
 * {
@@ -118,20 +113,27 @@ body.theme-nature {
   transition: background-color 0.05s ease, color 0.05s ease, border-color 0.05s ease, box-shadow 0.05s ease;
 }
 
+html {
+  scroll-behavior: smooth;
+}
+
 body {
   font-family: 'Outfit', sans-serif;
   background-color: var(--bg-color);
   color: var(--text-main);
   overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
-/* Glassmorphism utility */
+/* Glassmorphism utility — enhanced with inner glow */
 .glass {
   background: var(--glass-bg);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(16px) saturate(1.4);
+  -webkit-backdrop-filter: blur(16px) saturate(1.4);
   border: 1px solid var(--glass-border);
   border-radius: var(--border-radius-lg);
+  box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.05), var(--shadow-md);
 }
 
 /* Base Styles */
@@ -147,6 +149,7 @@ button {
   outline: none;
   font-family: inherit;
   transition: all var(--transition-fast);
+  -webkit-tap-highlight-color: transparent;
 }
 
 input,
@@ -154,115 +157,183 @@ select,
 textarea {
   font-family: inherit;
   outline: none;
+  -webkit-tap-highlight-color: transparent;
 }
 
-/* Scrollbar */
+/* Scrollbar — refined */
 ::-webkit-scrollbar {
-  width: 8px;
+  width: 6px;
 }
 
 ::-webkit-scrollbar-track {
-  background: var(--bg-color);
+  background: transparent;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: var(--surface-hover);
-  border-radius: 4px;
+  background: rgba(148, 163, 184, 0.2);
+  border-radius: 10px;
+  transition: background 0.2s;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--text-muted);
+  background: rgba(148, 163, 184, 0.4);
 }
 
-/* Skeleton Loading Animation */
+/* ═══════════════════════════════════
+   Global Keyframe Library
+   ═══════════════════════════════════ */
+
 @keyframes shimmer {
-  0% {
-    background-position: -1000px 0;
-  }
-
-  100% {
-    background-position: 1000px 0;
-  }
-}
-
-.skeleton {
-  background: var(--surface-color);
-  background-image: linear-gradient(90deg,
-      var(--surface-color) 0px,
-      var(--surface-hover) 40px,
-      var(--surface-color) 80px);
-  background-size: 1000px 100%;
-  animation: shimmer 2s infinite linear;
-}
-
-/* Simple Spinner */
-.spinner {
-  border: 4px solid rgba(255, 255, 255, 0.1);
-  border-radius: 50%;
-  border-top: 4px solid var(--primary-color);
-  width: 36px;
-  height: 36px;
-  animation: spin 1s linear infinite;
-}
-
-@media (max-width: 768px) {
-  .spinner {
-    width: 48px;
-    height: 48px;
-    border-width: 5px;
-  }
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
 }
 
 @keyframes spin {
-  0% {
-    transform: rotate(0deg);
-  }
-
-  100% {
-    transform: rotate(360deg);
-  }
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
 }
 
-/* Page Entry Animations */
 @keyframes fadeInUp {
   from {
     opacity: 0;
-    transform: translateY(10px);
+    transform: translateY(12px);
   }
-
   to {
     opacity: 1;
     transform: translateY(0);
   }
 }
 
-.animate-fade-in {
-  animation: fadeInUp var(--transition-normal) forwards;
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.92);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
 }
 
-/* Utility Classes */
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(24px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
+}
+
+@keyframes pulseGlow {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(99, 102, 241, 0.4); }
+  50% { box-shadow: 0 0 20px 4px rgba(99, 102, 241, 0.15); }
+}
+
+@keyframes gentlePulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+
+@keyframes btnShimmer {
+  0% { left: -100%; }
+  100% { left: 200%; }
+}
+
+/* Skeleton Loading Animation — premium gradient sweep */
+.skeleton {
+  background: var(--surface-color);
+  background-image: linear-gradient(
+    90deg,
+    var(--surface-color) 0%,
+    var(--surface-hover) 20%,
+    var(--surface-color) 40%,
+    var(--surface-color) 100%
+  );
+  background-size: 400% 100%;
+  animation: shimmer 1.8s ease-in-out infinite;
+}
+
+/* Simple Spinner — refined */
+.spinner {
+  border: 3px solid rgba(255, 255, 255, 0.08);
+  border-radius: 50%;
+  border-top: 3px solid var(--primary-color);
+  width: 36px;
+  height: 36px;
+  animation: spin 0.8s cubic-bezier(0.5, 0, 0.5, 1) infinite;
+}
+
+@media (max-width: 768px) {
+  .spinner {
+    width: 44px;
+    height: 44px;
+    border-width: 4px;
+  }
+}
+
+/* Page Entry Animations */
+.animate-fade-in {
+  animation: fadeInUp 0.5s var(--spring) forwards;
+}
+
+/* ═══════════════════════════════════
+   Utility Classes — Enhanced
+   ═══════════════════════════════════ */
+
+/* Primary Button — premium feel */
 .btn-primary {
   background: var(--primary-color);
   color: white;
   padding: 10px 20px;
   border-radius: var(--border-radius-md);
-  font-weight: 500;
+  font-weight: 600;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+}
+
+/* Shimmer sweep on hover */
+.btn-primary::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 60%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.15), transparent);
+  transform: skewX(-20deg);
+  transition: left 0.6s ease;
+  pointer-events: none;
+  z-index: 1;
 }
 
 .btn-primary:hover {
   background: var(--primary-hover);
-  transform: translateY(-2px) scale(1.02);
-  box-shadow: 0 4px 15px rgba(99, 102, 241, 0.4);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(99, 102, 241, 0.35), 0 0 40px rgba(99, 102, 241, 0.1);
+}
+
+.btn-primary:hover::after {
+  left: 150%;
 }
 
 .btn-primary:active {
-  transform: translateY(0) scale(0.98);
+  transform: translateY(0) scale(0.97);
+  box-shadow: 0 2px 8px rgba(99, 102, 241, 0.3);
 }
 
+/* Input Fields — enhanced focus micro-animation */
 .input-field {
   width: 100%;
   height: 48px;
@@ -273,12 +344,15 @@ textarea {
   border-radius: var(--border-radius-md);
   color: var(--text-main);
   font-size: 16px;
-  transition: var(--transition-fast);
+  transition: border-color var(--transition-fast),
+              box-shadow var(--transition-fast),
+              background var(--transition-fast);
 }
 
 .input-field:focus {
   border-color: var(--primary-color);
-  box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2);
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15), 0 0 16px rgba(99, 102, 241, 0.08);
+  background: rgba(255, 255, 255, 0.05);
 }
 
 /* Flex utilities */
@@ -300,17 +374,9 @@ textarea {
   justify-content: space-between;
 }
 
-.gap-1 {
-  gap: 8px;
-}
-
-.gap-2 {
-  gap: 16px;
-}
-
-.gap-3 {
-  gap: 24px;
-}
+.gap-1 { gap: 8px; }
+.gap-2 { gap: 16px; }
+.gap-3 { gap: 24px; }
 
 /* Hide HTML5 number input squishy spin buttons globally */
 input[type="number"]::-webkit-inner-spin-button,
@@ -328,4 +394,18 @@ input[type="number"] {
 /* Ensure all video grids always stretch rows uniformly regardless of internal content differences */
 .video-grid {
   align-items: stretch !important;
+}
+
+/* ═══════════════════════════════════
+   Accessibility — Reduced Motion
+   ═══════════════════════════════════ */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }

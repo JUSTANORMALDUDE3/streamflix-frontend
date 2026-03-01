@@ -9,6 +9,7 @@
     margin-bottom: 24px;
     flex-wrap: wrap;
     gap: 16px;
+    animation: fadeInUp 0.5s var(--spring) forwards;
 }
 
 .home-header h2 {
@@ -23,6 +24,12 @@
     font-size: 0.85rem;
     color: var(--text-muted);
     border: 1px solid var(--border-color);
+    transition: transform var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.rank-info-badge:hover {
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-sm);
 }
 
 .uppercase {
@@ -39,21 +46,70 @@
    =========================== */
 .video-grid {
     display: grid;
-    /* Desktop: flexible columns, min 260px each */
     grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-    /* KEY FIX: Every row is exactly the same fixed height.
-       This is CSS Grid's built-in mechanism for equal-height rows
-       and it cannot be overridden by text content. */
     grid-auto-rows: 310px;
     gap: 20px;
     align-items: start;
+}
+
+/* Staggered animation for grid items */
+.video-grid>* {
+    animation: fadeInUp 0.4s var(--spring) both;
+}
+
+.video-grid>*:nth-child(1) {
+    animation-delay: 0ms;
+}
+
+.video-grid>*:nth-child(2) {
+    animation-delay: 40ms;
+}
+
+.video-grid>*:nth-child(3) {
+    animation-delay: 80ms;
+}
+
+.video-grid>*:nth-child(4) {
+    animation-delay: 120ms;
+}
+
+.video-grid>*:nth-child(5) {
+    animation-delay: 160ms;
+}
+
+.video-grid>*:nth-child(6) {
+    animation-delay: 200ms;
+}
+
+.video-grid>*:nth-child(7) {
+    animation-delay: 240ms;
+}
+
+.video-grid>*:nth-child(8) {
+    animation-delay: 280ms;
+}
+
+.video-grid>*:nth-child(9) {
+    animation-delay: 320ms;
+}
+
+.video-grid>*:nth-child(10) {
+    animation-delay: 360ms;
+}
+
+.video-grid>*:nth-child(11) {
+    animation-delay: 400ms;
+}
+
+.video-grid>*:nth-child(12) {
+    animation-delay: 440ms;
 }
 
 /* Animation for search results */
 @keyframes searchResultPop {
     0% {
         opacity: 0;
-        transform: scale(0.95) translateY(16px);
+        transform: scale(0.93) translateY(16px);
     }
 
     100% {
@@ -64,8 +120,7 @@
 
 .search-anim-item {
     opacity: 0;
-    animation: searchResultPop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
-    /* Must be full-height so the inner .video-card { height: 100% } fills the row */
+    animation: searchResultPop 0.45s var(--spring) forwards;
     height: 100%;
 }
 
@@ -77,6 +132,7 @@
     border-radius: var(--border-radius-lg);
     border: 1px dashed var(--border-color);
     color: var(--text-muted);
+    animation: fadeInUp 0.5s var(--spring) forwards;
 }
 
 .empty-state h3 {
@@ -84,12 +140,18 @@
     margin-bottom: 8px;
 }
 
+.empty-state svg {
+    animation: float 3s ease-in-out infinite;
+}
+
 .error-message {
     color: #ef4444;
     padding: 16px;
-    background: rgba(239, 68, 68, 0.1);
+    background: rgba(239, 68, 68, 0.08);
     border-radius: var(--border-radius-md);
     margin-bottom: 24px;
+    border: 1px solid rgba(239, 68, 68, 0.15);
+    animation: scaleIn 0.3s var(--spring) forwards;
 }
 
 /* ===========================
@@ -99,7 +161,6 @@
     .video-grid {
         grid-template-columns: repeat(2, 1fr);
         grid-auto-rows: 220px;
-        /* Strict fixed row height for small phones */
         gap: 10px;
     }
 
@@ -115,6 +176,12 @@
     .rank-info-badge {
         padding: 6px 12px;
         font-size: 0.75rem;
+    }
+
+    /* Reduce stagger delay on mobile */
+    .video-grid>* {
+        animation-delay: 0ms !important;
+        animation-duration: 0.3s;
     }
 }
 

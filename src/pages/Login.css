@@ -15,29 +15,57 @@
     padding: 40px;
     position: relative;
     z-index: 10;
-    box-shadow: 0 24px 48px rgba(0, 0, 0, 0.5);
+    box-shadow: 0 24px 60px rgba(0, 0, 0, 0.5);
+    animation: slideUp 0.6s var(--spring) forwards;
 }
 
+/* Floating background glows */
 .bg-glow {
     position: absolute;
     width: 50vw;
     height: 50vw;
     border-radius: 50%;
-    filter: blur(100px);
+    filter: blur(120px);
     z-index: 1;
-    opacity: 0.15;
+    opacity: 0.12;
 }
 
 .glow-1 {
     background: var(--primary-color);
     top: -20vh;
     left: -10vw;
+    animation: floatGlow1 8s ease-in-out infinite;
 }
 
 .glow-2 {
     background: #ea580c;
     bottom: -20vh;
     right: -10vw;
+    animation: floatGlow2 10s ease-in-out infinite;
+}
+
+@keyframes floatGlow1 {
+
+    0%,
+    100% {
+        transform: translate(0, 0) scale(1);
+    }
+
+    50% {
+        transform: translate(30px, 20px) scale(1.05);
+    }
+}
+
+@keyframes floatGlow2 {
+
+    0%,
+    100% {
+        transform: translate(0, 0) scale(1);
+    }
+
+    50% {
+        transform: translate(-25px, -15px) scale(1.08);
+    }
 }
 
 .mb-4 {
@@ -69,6 +97,11 @@ h2 {
     font-weight: 500;
     margin-bottom: 8px;
     color: var(--text-muted);
+    transition: color var(--transition-fast);
+}
+
+.form-group:focus-within label {
+    color: var(--primary-color);
 }
 
 .error-banner {
@@ -79,17 +112,42 @@ h2 {
     border-radius: var(--border-radius-md);
     margin-bottom: 24px;
     font-size: 0.9rem;
+    animation: scaleIn 0.3s var(--spring) forwards;
 }
 
 button[type="submit"] {
     width: 100%;
     padding: 14px;
     font-size: 1rem;
+    font-weight: 600;
+    position: relative;
+    overflow: hidden;
+}
+
+button[type="submit"]::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 60%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.12), transparent);
+    transform: skewX(-20deg);
+    transition: left 0.5s ease;
+    pointer-events: none;
+}
+
+button[type="submit"]:hover::after {
+    left: 150%;
 }
 
 button[type="submit"]:disabled {
     opacity: 0.7;
     cursor: not-allowed;
+}
+
+button[type="submit"]:active:not(:disabled) {
+    transform: scale(0.97);
 }
 
 /* Mobile Responsiveness for Login Screen */
@@ -101,9 +159,8 @@ button[type="submit"]:disabled {
     .login-card {
         padding: 30px 20px;
         margin: 0;
-        /* Container handles the spacing now */
         border-radius: var(--border-radius-md);
-        box-shadow: 0 12px 24px rgba(0, 0, 0, 0.3);
+        box-shadow: 0 12px 30px rgba(0, 0, 0, 0.3);
     }
 
     h2 {
@@ -114,5 +171,12 @@ button[type="submit"]:disabled {
     .subtitle {
         font-size: 0.85rem;
         text-align: center;
+    }
+
+    .bg-glow {
+        width: 70vw;
+        height: 70vw;
+        filter: blur(80px);
+        opacity: 0.1;
     }
 }

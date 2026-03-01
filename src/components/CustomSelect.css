@@ -9,10 +9,11 @@
     justify-content: space-between;
     cursor: pointer;
     user-select: none;
+    transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
 }
 
 .custom-select-icon {
-    transition: transform var(--transition-fast);
+    transition: transform 0.3s var(--spring);
     color: var(--text-muted);
 }
 
@@ -31,7 +32,21 @@
     flex-direction: column;
     gap: 4px;
     border-radius: var(--border-radius-md);
-    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.7);
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.6);
+    animation: selectDropIn 0.25s var(--spring) forwards;
+    transform-origin: top center;
+}
+
+@keyframes selectDropIn {
+    from {
+        opacity: 0;
+        transform: translateY(-8px) scaleY(0.95);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0) scaleY(1);
+    }
 }
 
 .custom-select-search-container {
@@ -53,16 +68,17 @@
     width: 100%;
     background: rgba(0, 0, 0, 0.2);
     border: 1px solid var(--border-color);
-    border-radius: 6px;
+    border-radius: 8px;
     color: var(--text-main);
     padding: 8px 10px 8px 34px;
     font-size: 0.9rem;
-    transition: var(--transition-fast);
+    transition: border-color var(--transition-fast), background var(--transition-fast), box-shadow var(--transition-fast);
 }
 
 .custom-select-search-input:focus {
     border-color: var(--primary-color);
-    background: rgba(0, 0, 0, 0.4);
+    background: rgba(0, 0, 0, 0.35);
+    box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.12);
 }
 
 .custom-select-options-list {
@@ -70,7 +86,8 @@
     overflow-y: auto;
     display: flex;
     flex-direction: column;
-    gap: 4px;
+    gap: 2px;
+    -webkit-overflow-scrolling: touch;
 }
 
 .custom-select-no-results {
@@ -86,11 +103,16 @@
     cursor: pointer;
     font-size: 0.95rem;
     color: var(--text-main);
-    transition: background var(--transition-fast), color var(--transition-fast);
+    transition: background var(--transition-micro), color var(--transition-micro), transform var(--transition-micro);
 }
 
 .custom-select-option:hover {
     background: var(--surface-hover);
+    transform: translateX(4px);
+}
+
+.custom-select-option:active {
+    transform: translateX(2px) scale(0.98);
 }
 
 .custom-select-option.selected {

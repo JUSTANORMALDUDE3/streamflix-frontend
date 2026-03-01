@@ -1,6 +1,7 @@
 .watch-container {
     max-width: 1200px;
     margin: 0 auto;
+    animation: fadeInUp 0.4s var(--spring) forwards;
 }
 
 .player-wrapper {
@@ -10,7 +11,7 @@
     border-radius: var(--border-radius-lg);
     overflow: hidden;
     position: relative;
-    box-shadow: 0 16px 32px rgba(0, 0, 0, 0.5);
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6);
 }
 
 .video-player {
@@ -28,11 +29,13 @@
     font-weight: 700;
     margin-bottom: 16px;
     line-height: 1.2;
+    animation: fadeInUp 0.4s var(--spring) 0.1s both;
 }
 
 .watch-meta {
     color: var(--text-muted);
     font-size: 0.9rem;
+    animation: fadeInUp 0.4s var(--spring) 0.15s both;
 }
 
 .btn-action {
@@ -43,17 +46,19 @@
     cursor: pointer;
     font-weight: 500;
     font-size: 0.9rem;
+    border-radius: var(--border-radius-sm, 8px);
     will-change: filter;
-    transition: filter 300ms, color 300ms, transform var(--transition-fast);
+    transition: filter 200ms, color 200ms, transform 0.2s var(--spring), background 200ms;
 }
 
 .btn-action:hover {
     color: var(--text-main);
     filter: drop-shadow(0 0 2em var(--primary-color));
+    background: rgba(99, 102, 241, 0.06);
 }
 
 .btn-action:active {
-    transform: scale(0.95);
+    transform: scale(0.92);
 }
 
 .btn-action.active-like,
@@ -99,11 +104,11 @@
 }
 
 .btn-action.active-like svg {
-    animation: yt-like-pop 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+    animation: yt-like-pop 0.5s var(--spring) forwards;
 }
 
 .btn-action.active-dislike svg {
-    animation: yt-dislike-pop 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+    animation: yt-dislike-pop 0.5s var(--spring) forwards;
 }
 
 @keyframes yt-unlike-pop {
@@ -143,16 +148,16 @@
 }
 
 .btn-action.removing-like svg {
-    animation: yt-unlike-pop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+    animation: yt-unlike-pop 0.4s var(--spring) forwards;
     fill: none;
 }
 
 .btn-action.removing-dislike svg {
-    animation: yt-undislike-pop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+    animation: yt-undislike-pop 0.4s var(--spring) forwards;
     fill: none;
 }
 
-/* Download Button Styling */
+/* Download Button — premium */
 .btn-download {
     background: var(--primary-color);
     color: white;
@@ -171,11 +176,11 @@
 .btn-download:hover {
     background: var(--primary-hover);
     transform: translateY(-2px);
-    box-shadow: 0 8px 25px rgba(99, 102, 241, 0.5);
+    box-shadow: 0 8px 30px rgba(99, 102, 241, 0.5);
 }
 
 .btn-download:active {
-    transform: translateY(0) scale(0.95);
+    transform: translateY(0) scale(0.96);
 }
 
 .btn-download::before {
@@ -185,17 +190,17 @@
     left: -100%;
     width: 50%;
     height: 100%;
-    background: linear-gradient(to right, rgba(255, 255, 255, 0) 0%, rgba(255, 255, 255, 0.3) 50%, rgba(255, 255, 255, 0) 100%);
+    background: linear-gradient(to right, rgba(255, 255, 255, 0) 0%, rgba(255, 255, 255, 0.25) 50%, rgba(255, 255, 255, 0) 100%);
     transform: skewX(-25deg);
-    transition: left 0.75s ease;
+    transition: left 0.6s ease;
 }
 
 .btn-download:hover::before {
-    left: 150%;
+    left: 200%;
 }
 
 .btn-download svg {
-    transition: transform var(--transition-fast);
+    transition: transform 0.3s var(--spring);
 }
 
 .btn-download:hover svg {
@@ -223,6 +228,7 @@
     border-radius: var(--border-radius-lg);
     max-width: 600px;
     margin: 40px auto;
+    animation: fadeInUp 0.5s var(--spring) forwards;
 }
 
 .watch-error h2 {
@@ -234,19 +240,19 @@
     color: var(--text-muted);
 }
 
-/* Custom Video Player Overlay */
+/* Custom Video Player Overlay — glass controls */
 .video-controls-overlay {
     position: absolute;
     bottom: 0;
     left: 0;
     width: 100%;
     padding: 20px;
-    background: linear-gradient(to top, rgba(0, 0, 0, 0.8) 0%, transparent 100%);
+    background: linear-gradient(to top, rgba(0, 0, 0, 0.85) 0%, rgba(0, 0, 0, 0.3) 60%, transparent 100%);
     display: flex;
     flex-direction: column;
     justify-content: flex-end;
     opacity: 0;
-    transition: opacity var(--transition-normal);
+    transition: opacity 0.3s ease;
     z-index: 10;
 }
 
@@ -255,16 +261,16 @@
     opacity: 1;
 }
 
-/* Progress Bar */
+/* Progress Bar — enhanced */
 .progress-container {
     width: 100%;
-    height: 6px;
-    background: rgba(255, 255, 255, 0.2);
-    border-radius: 3px;
+    height: 4px;
+    background: rgba(255, 255, 255, 0.15);
+    border-radius: 4px;
     margin-bottom: 12px;
     cursor: pointer;
     position: relative;
-    transition: height var(--transition-fast);
+    transition: height 0.2s var(--spring);
 }
 
 .progress-container:hover {
@@ -274,12 +280,28 @@
 .progress-filled {
     height: 100%;
     background: var(--primary-color);
-    border-radius: 3px;
+    border-radius: 4px;
     position: absolute;
     top: 0;
     left: 0;
     pointer-events: none;
     transition: background-color var(--transition-fast);
+    box-shadow: 0 0 8px rgba(99, 102, 241, 0.5);
+}
+
+/* Progress scrub dot */
+.progress-container:hover .progress-filled::after {
+    content: '';
+    position: absolute;
+    right: -6px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: var(--primary-color);
+    box-shadow: 0 0 10px rgba(99, 102, 241, 0.6);
+    transition: transform 0.2s var(--spring);
 }
 
 /* Controls Layout */
@@ -293,7 +315,7 @@
 .control-group {
     display: flex;
     align-items: center;
-    gap: 16px;
+    gap: 12px;
 }
 
 .control-btn {
@@ -304,14 +326,19 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 4px;
+    padding: 6px;
     border-radius: 50%;
-    transition: opacity var(--transition-fast), transform var(--transition-fast);
+    transition: opacity var(--transition-fast), transform 0.2s var(--spring), background 0.2s;
 }
 
 .control-btn:hover {
-    opacity: 0.8;
-    transform: scale(1.1);
+    opacity: 0.9;
+    transform: scale(1.15);
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.control-btn:active {
+    transform: scale(0.9);
 }
 
 .time-display {
@@ -333,28 +360,35 @@
     appearance: none;
     width: 100%;
     height: 4px;
-    background: rgba(255, 255, 255, 0.3);
-    border-radius: 2px;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 4px;
     outline: none;
     cursor: pointer;
+    transition: height 0.2s ease;
+}
+
+.volume-slider:hover {
+    height: 5px;
 }
 
 .volume-slider::-webkit-slider-thumb {
     -webkit-appearance: none;
     appearance: none;
-    width: 12px;
-    height: 12px;
+    width: 14px;
+    height: 14px;
     border-radius: 50%;
     background: #fff;
     cursor: pointer;
-    transition: transform var(--transition-fast);
+    transition: transform 0.2s var(--spring), box-shadow 0.2s;
+    box-shadow: 0 0 6px rgba(255, 255, 255, 0.3);
 }
 
 .volume-slider::-webkit-slider-thumb:hover {
-    transform: scale(1.2);
+    transform: scale(1.3);
+    box-shadow: 0 0 12px rgba(255, 255, 255, 0.5);
 }
 
-/* Fullscreen handling */
+/* Fullscreen */
 .player-wrapper:fullscreen {
     border-radius: 0;
 }
@@ -401,7 +435,7 @@
 
     30% {
         opacity: 1;
-        background: rgba(255, 255, 255, 0.15);
+        background: rgba(255, 255, 255, 0.12);
     }
 
     100% {
@@ -416,7 +450,7 @@
     margin-top: 8px;
 }
 
-/* Buffering Overlay */
+/* Buffering Overlay — orbital spinner */
 .video-buffering-overlay {
     position: absolute;
     top: 0;
@@ -426,18 +460,20 @@
     display: flex;
     justify-content: center;
     align-items: center;
-    background: rgba(0, 0, 0, 0.4);
+    background: rgba(0, 0, 0, 0.35);
     z-index: 5;
     pointer-events: none;
+    backdrop-filter: blur(2px);
 }
 
 .video-spinner {
-    width: 64px;
-    height: 64px;
-    border: 4px solid rgba(255, 255, 255, 0.1);
+    width: 56px;
+    height: 56px;
+    border: 3px solid rgba(255, 255, 255, 0.08);
     border-top-color: var(--primary-color);
+    border-right-color: rgba(99, 102, 241, 0.3);
     border-radius: 50%;
-    animation: videoSpin 1s linear infinite;
+    animation: videoSpin 0.8s cubic-bezier(0.5, 0, 0.5, 1) infinite;
 }
 
 @keyframes videoSpin {
@@ -467,17 +503,17 @@
     width: 100%;
     height: 100%;
     object-fit: cover;
-    /* Force nearest-neighbor blocky rendering on the intentionally low-res canvas */
     image-rendering: -moz-crisp-edges;
     image-rendering: pixelated;
-    opacity: 0.7;
+    opacity: 0.6;
     z-index: 0;
+    animation: gentlePulse 4s ease-in-out infinite;
 }
 
 .mosaic-overlay {
     position: absolute;
     inset: 0;
-    background: rgba(0, 0, 0, 0.4);
+    background: rgba(0, 0, 0, 0.45);
     z-index: 1;
 }
 
@@ -488,12 +524,13 @@
     flex-direction: column;
     align-items: center;
     gap: 16px;
-    background: rgba(0, 0, 0, 0.5);
+    background: rgba(0, 0, 0, 0.55);
     padding: 32px 48px;
-    border-radius: 16px;
+    border-radius: 20px;
     border: 1px solid rgba(255, 255, 255, 0.1);
-    backdrop-filter: blur(10px);
+    backdrop-filter: blur(16px);
     text-align: center;
+    animation: scaleIn 0.5s var(--spring) forwards;
 }
 
 .lock-content h3 {
@@ -522,11 +559,17 @@
     }
 
     .control-group {
-        gap: 8px;
+        gap: 6px;
+    }
+
+    .control-btn {
+        padding: 8px;
+        min-width: 36px;
+        min-height: 36px;
     }
 
     .volume-container {
-        width: 70px;
+        width: 60px;
     }
 
     .watch-meta {
@@ -535,6 +578,11 @@
 
     .btn-action {
         font-size: 0.8rem;
-        padding: 6px 8px;
+        padding: 8px 10px;
+        min-height: 40px;
+    }
+
+    .progress-container {
+        height: 6px;
     }
 }

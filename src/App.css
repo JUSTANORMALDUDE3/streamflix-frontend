@@ -10,6 +10,7 @@
   flex: 1;
   padding: 24px;
   overflow-y: auto;
+  transition: padding var(--transition-fast);
 }
 
 /* Mobile Responsiveness for Core Root Layout */
@@ -22,5 +23,14 @@
     padding: 16px;
     padding-bottom: 90px;
     /* Clear the bottom navigation bar */
+  }
+}
+
+/* Safe area for notched phones (iPhone X+) */
+@supports (padding: env(safe-area-inset-bottom)) {
+  @media (max-width: 768px) {
+    .app-main-content {
+      padding-bottom: calc(90px + env(safe-area-inset-bottom));
+    }
   }
 }
