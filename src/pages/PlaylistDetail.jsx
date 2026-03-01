@@ -1,33 +1,45 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { useParams, useNavigate } from 'react-router-dom';
-import Loader from '../components/Loader';
 import VideoCard from '../components/VideoCard';
+import VideoCardSkeleton from '../components/skeletons/VideoCardSkeleton';
+import { useLoadingState } from '../hooks/useLoadingState';
 import { Play, GripVertical, Trash2, ArrowLeft } from 'lucide-react';
+import './Home.css';
+
+const getSkeletonCount = () => (window.innerWidth <= 600 ? 6 : 12);
 
 const PlaylistDetail = () => {
     const { id } = useParams();
     const navigate = useNavigate();
     const [playlist, setPlaylist] = useState(null);
-    const [loading, setLoading] = useState(true);
+    const { loading, startLoading, stopLoading } = useLoadingState(true);
     const [error, setError] = useState('');
+    const [skeletonCount, setSkeletonCount] = useState(getSkeletonCount);
 
     // Drag and Drop state
     const [draggedItemIndex, setDraggedItemIndex] = useState(null);
 
     useEffect(() => {
         const fetchPlaylist = async () => {
+            startLoading();
             try {
                 const res = await axios.get(`/playlists/${id}`);
                 setPlaylist(res.data.data);
             } catch (err) {
                 setError('Playlist not found or you lack permission.');
             } finally {
-                setLoading(false);
+                stopLoading();
             }
         };
         fetchPlaylist();
-    }, [id]);
+    }, [id, startLoading, stopLoading]);
+
+    useEffect(() => {
+        const handleResize = () => setSkeletonCount(getSkeletonCount());
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
+    }, []);
 
     const handleRemoveVideo = async (videoId) => {
         try {
@@ -76,7 +88,17 @@ const PlaylistDetail = () => {
         }
     };
 
-    if (loading) return <Loader fullScreen={false} />;
+    if (loading) {
+        return (
+            <div className="home-container" aria-busy="true">
+                <div className="video-grid">
+                    {Array.from({ length: skeletonCount }, (_, index) => (
+                        <VideoCardSkeleton key={`playlist-detail-skeleton-${index}`} />
+                    ))}
+                </div>
+            </div>
+        );
+    }
     if (error || !playlist) return <div className="home-container"><div className="error-message">{error}</div></div>;
 
     return (

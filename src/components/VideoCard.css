@@ -42,6 +42,15 @@
     transition: transform 0.3s ease;
 }
 
+.thumbnail {
+    opacity: 0;
+    transition: opacity 0.25s ease, transform 0.3s ease;
+}
+
+.thumbnail.loaded {
+    opacity: 1;
+}
+
 .video-card:hover .video-thumbnail {
     transform: scale(1.05);
 }

@@ -1,26 +1,30 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { X, Check } from 'lucide-react';
+import PlaylistCardSkeleton from './skeletons/PlaylistCardSkeleton';
+import { useLoadingState } from '../hooks/useLoadingState';
 import './ConfirmModal.css'; // Re-use modal styles
 
 const AddToPlaylistModal = ({ isOpen, onClose, videoId }) => {
     const [playlists, setPlaylists] = useState([]);
-    const [loading, setLoading] = useState(true);
+    const { loading, startLoading, stopLoading } = useLoadingState(true);
 
     useEffect(() => {
         if (!isOpen) return;
         const fetchPlaylists = async () => {
+            startLoading();
+            setPlaylists([]);
             try {
                 const res = await axios.get('/playlists');
                 setPlaylists(res.data.data);
             } catch (err) {
                 console.error('Failed to load playlists', err);
             } finally {
-                setLoading(false);
+                stopLoading();
             }
         };
         fetchPlaylists();
-    }, [isOpen]);
+    }, [isOpen, startLoading, stopLoading]);
 
     const handleTogglePlaylist = async (playlist) => {
         const inPlaylist = playlist.videos.includes(videoId);
@@ -54,7 +58,11 @@ const AddToPlaylistModal = ({ isOpen, onClose, videoId }) => {
                 </div>
 
                 {loading ? (
-                    <div style={{ padding: '2rem', textAlign: 'center' }}><div className="spinner" style={{ margin: '0 auto' }}></div></div>
+                    <div aria-busy="true" style={{ display: 'grid', gap: '12px' }}>
+                        {Array.from({ length: 3 }, (_, index) => (
+                            <PlaylistCardSkeleton key={`playlist-modal-skeleton-${index}`} />
+                        ))}
+                    </div>
                 ) : playlists.length === 0 ? (
                     <div style={{ textAlign: 'center', color: 'var(--text-muted)', padding: '1rem 0' }}>
                         No playlists found. Go to the Playlists tab to create one.

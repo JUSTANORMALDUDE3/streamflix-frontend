@@ -1,30 +1,41 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
-import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import Loader from '../components/Loader';
 import { Plus, ListVideo, Trash2 } from 'lucide-react';
+import PlaylistCardSkeleton from '../components/skeletons/PlaylistCardSkeleton';
+import { useLoadingState } from '../hooks/useLoadingState';
+import './Home.css';
+
+const getSkeletonCount = () => (window.innerWidth <= 600 ? 6 : 8);
 
 const Playlists = () => {
-    const { user } = useAuth();
     const navigate = useNavigate();
     const [playlists, setPlaylists] = useState([]);
-    const [loading, setLoading] = useState(true);
+    const { loading, startLoading, stopLoading } = useLoadingState(true);
     const [isCreating, setIsCreating] = useState(false);
     const [newPlaylistName, setNewPlaylistName] = useState('');
+    const [skeletonCount, setSkeletonCount] = useState(getSkeletonCount);
 
     useEffect(() => {
         const fetchPlaylists = async () => {
+            startLoading();
             try {
                 const res = await axios.get('/playlists');
                 setPlaylists(res.data.data);
             } catch (err) {
                 console.error('Error fetching playlists', err);
             } finally {
-                setLoading(false);
+                stopLoading();
             }
         };
+
         fetchPlaylists();
+    }, [startLoading, stopLoading]);
+
+    useEffect(() => {
+        const handleResize = () => setSkeletonCount(getSkeletonCount());
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
     }, []);
 
     const handleCreate = async (e) => {
@@ -53,10 +64,8 @@ const Playlists = () => {
         }
     };
 
-    if (loading) return <Loader fullScreen={false} />;
-
     return (
-        <div className="home-container">
+        <div className="home-container" aria-busy={loading}>
             <div className="home-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <h2>My Playlists</h2>
                 <button
@@ -86,7 +95,13 @@ const Playlists = () => {
                 </form>
             )}
 
-            {playlists.length === 0 ? (
+            {loading ? (
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '1.5rem' }}>
+                    {Array.from({ length: skeletonCount }, (_, index) => (
+                        <PlaylistCardSkeleton key={`playlist-skeleton-${index}`} />
+                    ))}
+                </div>
+            ) : playlists.length === 0 ? (
                 <div className="empty-state">
                     <h3>No playlists yet</h3>
                     <p>Create a playlist to organize your favorite videos.</p>

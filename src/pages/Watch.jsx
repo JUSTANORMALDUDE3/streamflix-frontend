@@ -1,12 +1,13 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import axios from 'axios';
-import Loader from '../components/Loader';
 import { ArrowLeft, Clock, Shield, Play, Pause, Volume2, VolumeX, Maximize, Minimize, ThumbsUp, ThumbsDown, Eye, FastForward, Rewind, Download, ListPlus } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import TokenModal from '../components/TokenModal';
 import AddToPlaylistModal from '../components/AddToPlaylistModal';
 import KeyboardHelpModal from '../components/KeyboardHelpModal';
+import VideoPageSkeleton from '../components/skeletons/VideoPageSkeleton';
+import { useLoadingState } from '../hooks/useLoadingState';
 import './Watch.css';
 
 const Watch = () => {
@@ -23,7 +24,7 @@ const Watch = () => {
     const [hasViewed, setHasViewed] = useState(false);
     const [animateUnlike, setAnimateUnlike] = useState(false);
     const [animateUndislike, setAnimateUndislike] = useState(false);
-    const [loading, setLoading] = useState(true);
+    const { loading, startLoading, stopLoading } = useLoadingState(true);
     const [error, setError] = useState('');
     const [lastTap, setLastTap] = useState(0);
     const [skipAction, setSkipAction] = useState(null);
@@ -74,6 +75,7 @@ const Watch = () => {
 
     useEffect(() => {
         const fetchVideo = async () => {
+            startLoading();
             try {
                 const res = await axios.get(`/videos/${id}`);
                 setVideo(res.data);
@@ -90,7 +92,7 @@ const Watch = () => {
                 setError('Video not found or you lack permission to view it.');
                 console.error(err);
             } finally {
-                setLoading(false);
+                stopLoading();
             }
         };
         fetchVideo();
@@ -102,7 +104,7 @@ const Watch = () => {
                 .catch(err => console.error('Failed to load playlist context', err));
         }
 
-    }, [id, playlistContextId, user]);
+    }, [id, playlistContextId, user, startLoading, stopLoading]);
 
     useEffect(() => {
         const handleFullscreenChange = () => {
@@ -228,7 +230,13 @@ const Watch = () => {
         return () => window.removeEventListener('keydown', handleKeyDown);
     });
 
-    if (loading) return <Loader fullScreen={false} />;
+    if (loading) {
+        return (
+            <div className="watch-container flex-column gap-3" aria-busy="true">
+                <VideoPageSkeleton />
+            </div>
+        );
+    }
 
     if (error || !video) {
         return (
@@ -430,7 +438,7 @@ const Watch = () => {
     };
 
     return (
-        <div className="watch-container flex-column gap-3">
+        <div className="watch-container flex-column gap-3" aria-busy={loading}>
             <div
                 className="player-wrapper glass"
                 ref={playerWrapperRef}

@@ -1,0 +1,261 @@
+.shimmer {
+    background: linear-gradient(
+        90deg,
+        #1f1f1f 25%,
+        #2a2a2a 37%,
+        #1f1f1f 63%
+    );
+    background-size: 400% 100%;
+    animation: shimmer 1.2s infinite;
+}
+
+@keyframes shimmer {
+    0% { background-position: 100% 0; }
+    100% { background-position: -100% 0; }
+}
+
+.skeleton-fade {
+    animation: skeletonFadeIn 0.2s ease;
+}
+
+@keyframes skeletonFadeIn {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+.video-card-skeleton {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    height: 100%;
+    background: var(--surface-color);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius-md);
+    overflow: hidden;
+    position: relative;
+    pointer-events: none;
+}
+
+.thumb-skeleton {
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    background-color: #1f1f1f;
+    flex-shrink: 0;
+}
+
+.video-card-skeleton-content {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 10px 12px 14px;
+    flex: 1;
+}
+
+.video-card-skeleton-meta {
+    margin-top: auto;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.text-skeleton {
+    border-radius: 8px;
+    background-color: #1f1f1f;
+}
+
+.text-skeleton.title {
+    height: 17px;
+    width: 80%;
+}
+
+.text-skeleton.meta {
+    height: 14px;
+    width: 42%;
+}
+
+.text-skeleton.rank {
+    width: 64px;
+    height: 22px;
+    border-radius: 999px;
+}
+
+.video-card-skeleton-indicator {
+    position: absolute;
+    inset: auto 0 0;
+    height: 3px;
+    background-color: #2a2a2a;
+}
+
+.video-page-skeleton {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.player-skeleton {
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    border-radius: 18px;
+    background-color: #1f1f1f;
+    border: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+.video-page-meta {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    padding: 24px;
+    border-radius: 18px;
+    background: var(--surface-color);
+    border: 1px solid var(--border-color);
+}
+
+.video-page-line {
+    height: 18px;
+    border-radius: 10px;
+    background-color: #1f1f1f;
+}
+
+.video-page-line.title {
+    height: 30px;
+    width: 72%;
+}
+
+.video-page-channel-row {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+
+.video-page-avatar {
+    width: 48px;
+    height: 48px;
+    border-radius: 999px;
+    background-color: #1f1f1f;
+    flex-shrink: 0;
+}
+
+.video-page-channel-copy {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    flex: 1;
+}
+
+.video-page-line.channel {
+    width: 36%;
+}
+
+.video-page-line.channel-meta {
+    width: 22%;
+    height: 14px;
+}
+
+.video-page-actions-row {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.video-page-chip {
+    width: 92px;
+    height: 34px;
+    border-radius: 999px;
+    background-color: #1f1f1f;
+}
+
+.video-page-line.description {
+    width: 100%;
+}
+
+.video-page-line.description.short {
+    width: 64%;
+}
+
+.playlist-card-skeleton {
+    border-radius: 12px;
+    padding: 24px;
+    min-height: 148px;
+    background: var(--surface-color);
+    border: 1px solid var(--border-color);
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.playlist-row-skeleton {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.playlist-icon-skeleton {
+    width: 48px;
+    height: 48px;
+    border-radius: 10px;
+    background-color: #1f1f1f;
+    flex-shrink: 0;
+}
+
+.playlist-text-group {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    width: 100%;
+}
+
+.playlist-title-skeleton {
+    width: 62%;
+    height: 18px;
+    border-radius: 8px;
+    background-color: #1f1f1f;
+}
+
+.playlist-meta-skeleton {
+    width: 38%;
+    height: 14px;
+    border-radius: 8px;
+    background-color: #1f1f1f;
+}
+
+@media (max-width: 600px) {
+    .shimmer {
+        animation-duration: 1.8s;
+    }
+
+    .video-page-meta {
+        padding: 18px;
+    }
+
+    .video-page-line.title {
+        width: 100%;
+        height: 24px;
+    }
+
+    .video-page-line.channel {
+        width: 58%;
+    }
+
+    .video-page-line.channel-meta {
+        width: 42%;
+    }
+
+    .video-page-chip {
+        width: 76px;
+        height: 30px;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .shimmer,
+    .skeleton-fade {
+        animation: none;
+    }
+}
