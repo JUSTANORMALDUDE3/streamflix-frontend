@@ -4,8 +4,10 @@ import { useAuth } from '../context/AuthContext';
 import VideoCard from '../components/VideoCard';
 import VideoCardSkeleton from '../components/skeletons/VideoCardSkeleton';
 import { useLoadingState } from '../hooks/useLoadingState';
-import './Home.css'; // Re-use Home grid styling
+import { prefetchPreviewBatch, scheduleIdlePrefetch } from '../utils/prefetchStore';
+import './Home.css';
 
+const PREVIEW_WARMUP_LIMIT = 8;
 const getSkeletonCount = () => (window.innerWidth <= 600 ? 6 : 12);
 
 const Explore = () => {
@@ -20,7 +22,6 @@ const Explore = () => {
             startLoading();
             try {
                 const res = await axios.get('/videos');
-                // Since the videos route was converted to cursor-pagination, the array is in res.data.videos
                 let shuffledArray = [...res.data.videos];
                 for (let i = shuffledArray.length - 1; i > 0; i--) {
                     const j = Math.floor(Math.random() * (i + 1));
@@ -42,6 +43,14 @@ const Explore = () => {
         window.addEventListener('resize', handleResize);
         return () => window.removeEventListener('resize', handleResize);
     }, []);
+
+    useEffect(() => {
+        if (loading || videos.length === 0) return undefined;
+
+        return scheduleIdlePrefetch(() => {
+            prefetchPreviewBatch(videos, user?.token || '', PREVIEW_WARMUP_LIMIT).catch(() => {});
+        }, 700);
+    }, [loading, videos, user?.token]);
 
     return (
         <div className="home-container" aria-busy={loading}>

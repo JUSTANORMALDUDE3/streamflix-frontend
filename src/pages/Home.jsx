@@ -5,10 +5,20 @@ import { useAuth } from '../context/AuthContext';
 import VideoCard from '../components/VideoCard';
 import VideoCardSkeleton from '../components/skeletons/VideoCardSkeleton';
 import { useLoadingState } from '../hooks/useLoadingState';
+import {
+    getPrefetchedHomePage,
+    prefetchHomePage,
+    prefetchPreviewBatch,
+    primeHomePage,
+    restoreScrollPosition,
+    scheduleIdlePrefetch
+} from '../utils/prefetchStore';
 import './Home.css';
 
 const LIMIT = 20;
+const RANGE_DAYS = 30;
 const FETCH_MORE_SKELETON_COUNT = 6;
+const PREVIEW_WARMUP_LIMIT = 8;
 const getSkeletonCount = () => (window.innerWidth <= 600 ? 6 : 12);
 
 const Home = () => {
@@ -16,6 +26,7 @@ const Home = () => {
     const [searchParams] = useSearchParams();
     const categoryFilter = searchParams.get('category');
     const searchQuery = searchParams.get('search');
+    const isDefaultFeed = !categoryFilter && !searchQuery;
 
     const [videos, setVideos] = useState([]);
     const { loading, startLoading, stopLoading } = useLoadingState(true);
@@ -27,6 +38,7 @@ const Home = () => {
 
     const sentinelRef = useRef(null);
     const activeRequest = useRef(false);
+    const restoredScroll = useRef(false);
 
     const fetchVideos = useCallback(async ({ cursor = null, reset = false } = {}) => {
         if (activeRequest.current) return;
@@ -43,15 +55,36 @@ const Home = () => {
         }
 
         try {
-            const params = { limit: LIMIT };
-            if (cursor) params.cursor = cursor;
-            if (categoryFilter) params.category = categoryFilter;
-            if (searchQuery) params.search = searchQuery;
+            let batch = [];
+            let nc = null;
+            let more = false;
 
-            const res = await axios.get('/videos', { params });
-            const { videos: batch, nextCursor: nc, hasMore: more } = res.data;
+            if (isDefaultFeed) {
+                const params = { limit: LIMIT, rangeDays: RANGE_DAYS };
+                if (cursor) params.cursor = cursor;
 
-            setVideos(prev => (reset ? batch : [...prev, ...batch]));
+                const cached = getPrefetchedHomePage(params);
+                const data = cached || (await axios.get('/home', { params })).data;
+                if (!cached) {
+                    primeHomePage(params, data);
+                }
+
+                batch = data.feed?.items || [];
+                nc = data.feed?.nextCursor || null;
+                more = data.feed?.hasMore ?? Boolean(nc);
+            } else {
+                const params = { limit: LIMIT };
+                if (cursor) params.cursor = cursor;
+                if (categoryFilter) params.category = categoryFilter;
+                if (searchQuery) params.search = searchQuery;
+
+                const res = await axios.get('/videos', { params });
+                batch = res.data.videos || [];
+                nc = res.data.nextCursor || null;
+                more = res.data.hasMore ?? Boolean(nc);
+            }
+
+            setVideos((prev) => (reset ? batch : [...prev, ...batch]));
             setNextCursor(nc);
             setHasMore(more);
         } catch (err) {
@@ -61,9 +94,10 @@ const Home = () => {
             else setIsFetchingMore(false);
             activeRequest.current = false;
         }
-    }, [categoryFilter, searchQuery, startLoading, stopLoading]);
+    }, [categoryFilter, isDefaultFeed, searchQuery, startLoading, stopLoading]);
 
     useEffect(() => {
+        restoredScroll.current = false;
         fetchVideos({ reset: true });
     }, [fetchVideos]);
 
@@ -75,7 +109,7 @@ const Home = () => {
 
     useEffect(() => {
         const sentinel = sentinelRef.current;
-        if (!sentinel) return;
+        if (!sentinel) return undefined;
 
         const observer = new IntersectionObserver(([entry]) => {
             if (entry.isIntersecting && hasMore && !isFetchingMore && !loading) {
@@ -86,6 +120,29 @@ const Home = () => {
         observer.observe(sentinel);
         return () => observer.disconnect();
     }, [fetchVideos, hasMore, isFetchingMore, loading, nextCursor]);
+
+    useEffect(() => {
+        if (!isDefaultFeed || !nextCursor || loading || isFetchingMore) return undefined;
+
+        return scheduleIdlePrefetch(() => {
+            prefetchHomePage({ cursor: nextCursor, limit: LIMIT, rangeDays: RANGE_DAYS }).catch(() => {});
+        }, 1000);
+    }, [isDefaultFeed, nextCursor, loading, isFetchingMore]);
+
+    useEffect(() => {
+        if (loading || videos.length === 0) return undefined;
+
+        return scheduleIdlePrefetch(() => {
+            prefetchPreviewBatch(videos, user?.token || '', PREVIEW_WARMUP_LIMIT).catch(() => {});
+        }, 700);
+    }, [loading, videos, user?.token]);
+
+    useEffect(() => {
+        if (loading || restoredScroll.current || videos.length === 0) return;
+
+        const restored = restoreScrollPosition(`${window.location.pathname}${window.location.search}`);
+        restoredScroll.current = restored;
+    }, [loading, videos.length]);
 
     let displayCategory = 'Recommended for You';
     if (searchQuery) displayCategory = `Search Results for "${searchQuery}"`;

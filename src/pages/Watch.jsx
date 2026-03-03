@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import axios from 'axios';
 import { ArrowLeft, Clock, Shield, Play, Pause, Volume2, VolumeX, Maximize, Minimize, ThumbsUp, ThumbsDown, Eye, FastForward, Rewind, Download, ListPlus } from 'lucide-react';
@@ -8,7 +8,12 @@ import AddToPlaylistModal from '../components/AddToPlaylistModal';
 import KeyboardHelpModal from '../components/KeyboardHelpModal';
 import VideoPageSkeleton from '../components/skeletons/VideoPageSkeleton';
 import { useLoadingState } from '../hooks/useLoadingState';
+import { getPrefetchedVideoDetail, prefetchVideoDetail, primeVideoDetail } from '../utils/prefetchStore';
 import './Watch.css';
+
+const VIEW_THRESHOLD_SECONDS = 10;
+const VIEW_COOLDOWN_MS = 10 * 60 * 1000;
+const WATCHTIME_FLUSH_SECONDS = 15;
 
 const Watch = () => {
     const { id } = useParams();
@@ -21,7 +26,6 @@ const Watch = () => {
     const [video, setVideo] = useState(null);
     const [likeData, setLikeData] = useState({ likes: 0, dislikes: 0, isLiked: false, isDisliked: false });
     const [viewsCount, setViewsCount] = useState(0);
-    const [hasViewed, setHasViewed] = useState(false);
     const [animateUnlike, setAnimateUnlike] = useState(false);
     const [animateUndislike, setAnimateUndislike] = useState(false);
     const { loading, startLoading, stopLoading } = useLoadingState(true);
@@ -37,6 +41,10 @@ const Watch = () => {
     const canvasRef = useRef(null);
     const playerWrapperRef = useRef(null);
     const controlsTimeoutRef = useRef(null);
+    const playbackTickRef = useRef(null);
+    const accumulatedWatchSecondsRef = useRef(0);
+    const pendingWatchSecondsRef = useRef(0);
+    const viewCountedRef = useRef(false);
 
     const [isPlaying, setIsPlaying] = useState(true);
     const [progress, setProgress] = useState(0);
@@ -48,21 +56,78 @@ const Watch = () => {
     const [isFullScreen, setIsFullScreen] = useState(false);
     const [isBuffering, setIsBuffering] = useState(true);
 
+    const rankMapper = { top: 3, middle: 2, free: 1 };
+    const userRankVal = user && user.role === 'admin' ? 99 : (user ? rankMapper[user.rank] || 0 : 0);
+    const videoRankVal = video ? (rankMapper[video.rank] || 3) : 3;
+    const isLocked = userRankVal < videoRankVal;
+    const mediaToken = user?.token ? encodeURIComponent(user.token) : "";
+    const streamUrl = `${import.meta.env.VITE_API_URL}/videos/stream/${video?._id || ''}${mediaToken ? `?token=${mediaToken}` : ""}`;
+
+    const viewStorageKey = `viewed:${id}`;
+
+    const formatTime = (time) => {
+        if (isNaN(time)) return '0:00';
+        const minutes = Math.floor(time / 60);
+        const seconds = Math.floor(time % 60);
+        return `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+    };
+
+    const hydrateVideoState = useCallback((payload) => {
+        setVideo(payload);
+        setLikeData({
+            likes: payload.likes?.length || 0,
+            dislikes: payload.dislikes?.length || 0,
+            isLiked: payload.likes?.includes(user?._id) || false,
+            isDisliked: payload.dislikes?.includes(user?._id) || false,
+        });
+        setViewsCount(payload.views || 0);
+        primeVideoDetail(payload._id, payload);
+    }, [user?._id]);
+
+    const hasRecentViewCooldown = useCallback(() => {
+        const lastViewedAt = Number(sessionStorage.getItem(viewStorageKey) || 0);
+        return lastViewedAt > 0 && (Date.now() - lastViewedAt) < VIEW_COOLDOWN_MS;
+    }, [viewStorageKey]);
+
+    const markViewCooldown = useCallback(() => {
+        sessionStorage.setItem(viewStorageKey, String(Date.now()));
+    }, [viewStorageKey]);
+
+    const flushWatchtime = useCallback(async () => {
+        const deltaSeconds = pendingWatchSecondsRef.current;
+        if (!video || deltaSeconds <= 0 || isLocked) return;
+
+        pendingWatchSecondsRef.current = 0;
+        try {
+            await axios.post('/analytics/watchtime', {
+                videoId: video._id,
+                deltaSeconds
+            });
+        } catch (err) {
+            pendingWatchSecondsRef.current += deltaSeconds;
+        }
+    }, [isLocked, video]);
+
     useEffect(() => {
-        const fetchVideo = async () => {
+        accumulatedWatchSecondsRef.current = 0;
+        pendingWatchSecondsRef.current = 0;
+        viewCountedRef.current = hasRecentViewCooldown();
+    }, [hasRecentViewCooldown, id]);
+
+    useEffect(() => {
+        const cachedVideo = getPrefetchedVideoDetail(id);
+
+        if (cachedVideo) {
+            hydrateVideoState(cachedVideo);
+            stopLoading();
+        } else {
             startLoading();
+        }
+
+        const fetchVideo = async () => {
             try {
                 const res = await axios.get(`/videos/${id}`);
-                setVideo(res.data);
-                setLikeData({
-                    likes: res.data.likes?.length || 0,
-                    dislikes: res.data.dislikes?.length || 0,
-                    isLiked: res.data.likes?.includes(user?._id) || false,
-                    isDisliked: res.data.dislikes?.includes(user?._id) || false,
-                });
-                setViewsCount(res.data.views || 0);
-
-
+                hydrateVideoState(res.data);
             } catch (err) {
                 setError('Video not found or you lack permission to view it.');
                 console.error(err);
@@ -70,16 +135,19 @@ const Watch = () => {
                 stopLoading();
             }
         };
-        fetchVideo();
 
-        // ── Fetch playlist context for Autoplay Next ──────────────────────
+        setError('');
+        fetchVideo();
+        prefetchVideoDetail(id).catch(() => {});
+
         if (playlistContextId) {
             axios.get(`/playlists/${playlistContextId}`)
-                .then(res => setPlaylistVideos(res.data.data.videos))
-                .catch(err => console.error('Failed to load playlist context', err));
+                .then((res) => setPlaylistVideos(res.data.data.videos))
+                .catch((err) => console.error('Failed to load playlist context', err));
+        } else {
+            setPlaylistVideos([]);
         }
-
-    }, [id, playlistContextId, user, startLoading, stopLoading]);
+    }, [hydrateVideoState, id, playlistContextId, startLoading, stopLoading]);
 
     useEffect(() => {
         const handleFullscreenChange = () => {
@@ -87,41 +155,11 @@ const Watch = () => {
         };
         document.addEventListener('fullscreenchange', handleFullscreenChange);
 
-        const handleKeyDown = (e) => {
-            if (!videoRef.current) return;
-
-            // Prevent default scrolling behavior for arrow keys and spacebar
-            if (e.key === 'ArrowLeft' || e.key === 'ArrowRight' || e.key === ' ') {
-                e.preventDefault();
-            }
-
-            if (e.key === 'ArrowRight') {
-                videoRef.current.currentTime = Math.min(videoRef.current.currentTime + 10, videoRef.current.duration);
-            } else if (e.key === 'ArrowLeft') {
-                videoRef.current.currentTime = Math.max(videoRef.current.currentTime - 10, 0);
-            } else if (e.key === ' ') {
-                if (videoRef.current.paused) {
-                    videoRef.current.play();
-                } else {
-                    videoRef.current.pause();
-                }
-            }
-        };
-        window.addEventListener('keydown', handleKeyDown);
-
         return () => {
             document.removeEventListener('fullscreenchange', handleFullscreenChange);
-            window.removeEventListener('keydown', handleKeyDown);
         };
     }, []);
 
-    // Rank Math for UI Locking (Calculated early for Hooks order)
-    const rankMapper = { 'top': 3, 'middle': 2, 'free': 1 };
-    const userRankVal = user && user.role === 'admin' ? 99 : (user ? rankMapper[user.rank] || 0 : 0);
-    const videoRankVal = video ? (rankMapper[video.rank] || 3) : 3;
-    const isLocked = userRankVal < videoRankVal;
-
-    // Canvas Pixelation Effect for Locked Videos must be ABOVE early returns
     useEffect(() => {
         if (isLocked && video?.thumbnailUrl && canvasRef.current) {
             const img = new Image();
@@ -130,7 +168,6 @@ const Watch = () => {
                 const canvas = canvasRef.current;
                 if (!canvas) return;
                 const ctx = canvas.getContext('2d');
-                // Extremely low resolution buffer (32x18) creates massive pixel blocks
                 canvas.width = 32;
                 canvas.height = 18;
                 ctx.drawImage(img, 0, 0, 32, 18);
@@ -138,9 +175,8 @@ const Watch = () => {
         }
     }, [isLocked, video?.thumbnailUrl]);
 
-    // -- Progress Auto-Save Polling ---------------------------------------
     useEffect(() => {
-        if (!video || !videoRef.current || !user || isLocked) return;
+        if (!video || !videoRef.current || !user || isLocked) return undefined;
 
         const interval = setInterval(() => {
             const current = videoRef.current.currentTime;
@@ -150,7 +186,7 @@ const Watch = () => {
                     videoId: video._id,
                     progressSeconds: current,
                     duration: dur
-                }).catch(() => { });
+                }).catch(() => {});
             }
         }, 10000);
 
@@ -193,7 +229,7 @@ const Watch = () => {
                 case '?':
                     if (e.shiftKey) {
                         e.preventDefault();
-                        setShowKeyboardHelp(prev => !prev);
+                        setShowKeyboardHelp((prev) => !prev);
                     }
                     break;
                 default:
@@ -204,6 +240,53 @@ const Watch = () => {
         window.addEventListener('keydown', handleKeyDown);
         return () => window.removeEventListener('keydown', handleKeyDown);
     });
+
+    useEffect(() => {
+        if (!video || isLocked) return undefined;
+
+        const tickPlayback = async () => {
+            if (!videoRef.current || videoRef.current.paused || document.hidden) return;
+
+            accumulatedWatchSecondsRef.current += 1;
+            pendingWatchSecondsRef.current += 1;
+
+            if (!viewCountedRef.current && accumulatedWatchSecondsRef.current >= VIEW_THRESHOLD_SECONDS) {
+                try {
+                    const res = await axios.post('/analytics/view', {
+                        videoId: video._id,
+                        watchedSeconds: accumulatedWatchSecondsRef.current
+                    });
+
+                    if (res.data?.counted) {
+                        markViewCooldown();
+                    }
+
+                    viewCountedRef.current = Boolean(res.data?.counted) || hasRecentViewCooldown();
+                    if (typeof res.data?.views === 'number') {
+                        setViewsCount(res.data.views);
+                    }
+                } catch (err) {
+                    console.error('Error recording view', err);
+                }
+            }
+
+            if (pendingWatchSecondsRef.current >= WATCHTIME_FLUSH_SECONDS) {
+                await flushWatchtime();
+            }
+        };
+
+        playbackTickRef.current = window.setInterval(() => {
+            tickPlayback().catch(() => {});
+        }, 1000);
+
+        return () => {
+            if (playbackTickRef.current) {
+                window.clearInterval(playbackTickRef.current);
+                playbackTickRef.current = null;
+            }
+            flushWatchtime().catch(() => {});
+        };
+    }, [flushWatchtime, hasRecentViewCooldown, isLocked, markViewCooldown, video]);
 
     if (loading) {
         return (
@@ -224,15 +307,6 @@ const Watch = () => {
             </div>
         );
     }
-    // Stream URL for the custom video player
-    const streamUrl = `${import.meta.env.VITE_API_URL}/videos/stream/${video?._id || ''}`;
-
-    const formatTime = (time) => {
-        if (isNaN(time)) return '0:00';
-        const minutes = Math.floor(time / 60);
-        const seconds = Math.floor(time % 60);
-        return `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
-    };
 
     const togglePlay = () => {
         if (videoRef.current) {
@@ -283,25 +357,12 @@ const Watch = () => {
             const dur = videoRef.current.duration;
             setCurrentTime(formatTime(current));
             setProgress(dur ? (current / dur) * 100 : 0);
-
-            // Record one analytics-backed view after 1 second of playback.
-            if (current >= 1 && !hasViewed) {
-                setHasViewed(true);
-                axios.post('/analytics/view', {
-                    videoId: id,
-                    watchTime: Math.round(current)
-                })
-                    .then(res => setViewsCount(res.data.views || 0))
-                    .catch(console.error);
-            }
         }
     };
 
     const handleLoadedMetadata = () => {
         if (videoRef.current) {
-            const dur = videoRef.current.duration;
-            setDuration(formatTime(dur));
-
+            setDuration(formatTime(videoRef.current.duration));
         }
     };
 
@@ -333,16 +394,17 @@ const Watch = () => {
 
     const toggleFullScreen = () => {
         if (!document.fullscreenElement) {
-            playerWrapperRef.current.requestFullscreen().catch(err => console.error(err));
+            playerWrapperRef.current.requestFullscreen().catch((err) => console.error(err));
         } else {
             document.exitFullscreen();
         }
     };
 
     const handleVideoEnded = () => {
-        // Auto-Play Next logic if in a playlist
+        flushWatchtime().catch(() => {});
+
         if (playlistContextId && playlistVideos.length > 0) {
-            const currentIndex = playlistVideos.findIndex(v => v._id === id);
+            const currentIndex = playlistVideos.findIndex((playlistVideo) => playlistVideo._id === id);
             if (currentIndex !== -1 && currentIndex + 1 < playlistVideos.length) {
                 const nextVideoId = playlistVideos[currentIndex + 1]._id;
                 navigate(`/watch/${nextVideoId}?playlist=${playlistContextId}`);
@@ -361,10 +423,9 @@ const Watch = () => {
     const handleLike = async () => {
         const previousData = { ...likeData };
 
-        // Optimistic UI Update
-        setLikeData(prev => {
-            let newLikes = prev.isLiked ? prev.likes - 1 : prev.likes + 1;
-            let newDislikes = prev.isDisliked ? prev.dislikes - 1 : prev.dislikes;
+        setLikeData((prev) => {
+            const newLikes = prev.isLiked ? prev.likes - 1 : prev.likes + 1;
+            const newDislikes = prev.isDisliked ? prev.dislikes - 1 : prev.dislikes;
             return {
                 ...prev,
                 isLiked: !prev.isLiked,
@@ -379,7 +440,7 @@ const Watch = () => {
             setLikeData(res.data);
         } catch (err) {
             console.error('Error liking video', err);
-            setLikeData(previousData); // Revert on error
+            setLikeData(previousData);
         }
     };
 
@@ -391,10 +452,9 @@ const Watch = () => {
             setTimeout(() => setAnimateUndislike(false), 400);
         }
 
-        // Optimistic UI Update
-        setLikeData(prev => {
-            let newDislikes = prev.isDisliked ? prev.dislikes - 1 : prev.dislikes + 1;
-            let newLikes = prev.isLiked ? prev.likes - 1 : prev.likes;
+        setLikeData((prev) => {
+            const newDislikes = prev.isDisliked ? prev.dislikes - 1 : prev.dislikes + 1;
+            const newLikes = prev.isLiked ? prev.likes - 1 : prev.likes;
             return {
                 ...prev,
                 isDisliked: !prev.isDisliked,
@@ -409,7 +469,7 @@ const Watch = () => {
             setLikeData(res.data);
         } catch (err) {
             console.error('Error disliking video', err);
-            setLikeData(previousData); // Revert on error
+            setLikeData(previousData);
         }
     };
 
@@ -426,11 +486,17 @@ const Watch = () => {
                         <video
                             ref={videoRef}
                             autoPlay
+                            playsInline
+                            preload="auto"
+                            crossOrigin="use-credentials"
                             onClick={handleVideoClick}
                             onTimeUpdate={handleTimeUpdate}
                             onLoadedMetadata={handleLoadedMetadata}
                             onPlay={() => setIsPlaying(true)}
-                            onPause={() => setIsPlaying(false)}
+                            onPause={() => {
+                                setIsPlaying(false);
+                                flushWatchtime().catch(() => {});
+                            }}
                             onWaiting={() => setIsBuffering(true)}
                             onPlaying={() => setIsBuffering(false)}
                             onCanPlay={() => setIsBuffering(false)}
@@ -470,17 +536,19 @@ const Watch = () => {
 
                             <div className="control-bar">
                                 <div className="control-group">
-                                    <button className="control-btn" onClick={togglePlay} title={isPlaying ? "Pause" : "Play"}>
+                                    <button className="control-btn" onClick={togglePlay} title={isPlaying ? 'Pause' : 'Play'}>
                                         {isPlaying ? <Pause fill="currentColor" size={24} /> : <Play fill="currentColor" size={24} />}
                                     </button>
 
                                     <div className="volume-container">
-                                        <button className="control-btn" onClick={handleMuteToggle} title={isMuted ? "Unmute (m)" : "Mute (m)"}>
+                                        <button className="control-btn" onClick={handleMuteToggle} title={isMuted ? 'Unmute (m)' : 'Mute (m)'}>
                                             {isMuted || volume === 0 ? <VolumeX size={20} /> : <Volume2 size={20} />}
                                         </button>
                                         <input
                                             type="range"
-                                            min="0" max="1" step="0.05"
+                                            min="0"
+                                            max="1"
+                                            step="0.05"
                                             className="volume-slider"
                                             value={isMuted ? 0 : volume}
                                             onChange={handleVolumeChange}
@@ -500,7 +568,7 @@ const Watch = () => {
                                 </div>
                             </div>
                         </div>
-                    </> /* end isLocked=false fragment */
+                    </>
                 ) : (
                     <div className="mosaic-lock animate-fade-in">
                         <canvas ref={canvasRef} className="mosaic-bg" />
@@ -523,7 +591,7 @@ const Watch = () => {
                         </div>
                         <div className="meta-item flex-row ai-center gap-1">
                             <Clock size={16} />
-                            <span>{new Date(video.uploadDate).toLocaleDateString()}</span>
+                            <span>{new Date(video.uploadDate || video.createdAt).toLocaleDateString()}</span>
                         </div>
                         <div className="meta-item flex-row ai-center gap-1">
                             <Eye size={16} />
@@ -550,7 +618,7 @@ const Watch = () => {
                             className="btn-download flex-row ai-center gap-2"
                             onClick={() => setShowTokenModal(true)}
                             disabled={isLocked}
-                            title={isLocked ? "Rank required to download" : "Download Video"}
+                            title={isLocked ? 'Rank required to download' : 'Download Video'}
                             style={isLocked ? { opacity: 0.5, cursor: 'not-allowed', filter: 'grayscale(1)' } : {}}
                         >
                             <Download size={18} />
@@ -574,19 +642,19 @@ const Watch = () => {
                     <p>{video.description || 'No description provided for this video.'}</p>
                     {video.hashtags && video.hashtags.length > 0 && (
                         <div className="hashtags flex-row mt-3" style={{ flexWrap: 'wrap', gap: '8px' }}>
-                            {video.hashtags.map(tag => (
+                            {video.hashtags.map((tag) => (
                                 <span
                                     key={tag}
                                     className="hashtag"
                                     onClick={() => navigate(`/?search=${encodeURIComponent(tag.replace('#', ''))}`)}
                                     style={{
-                                        color: '#3b82f6', // blue accent
+                                        color: '#3b82f6',
                                         cursor: 'pointer',
                                         textDecoration: 'none',
                                         fontWeight: '500'
                                     }}
-                                    onMouseEnter={e => e.target.style.textDecoration = 'underline'}
-                                    onMouseLeave={e => e.target.style.textDecoration = 'none'}
+                                    onMouseEnter={(e) => { e.target.style.textDecoration = 'underline'; }}
+                                    onMouseLeave={(e) => { e.target.style.textDecoration = 'none'; }}
                                 >
                                     {tag}
                                 </span>
@@ -596,11 +664,9 @@ const Watch = () => {
                 </div>
             </div>
 
-            {
-                showTokenModal && (
-                    <TokenModal videoId={id} onClose={() => setShowTokenModal(false)} />
-                )
-            }
+            {showTokenModal && (
+                <TokenModal videoId={id} onClose={() => setShowTokenModal(false)} />
+            )}
             <AddToPlaylistModal
                 isOpen={showPlaylistModal}
                 onClose={() => setShowPlaylistModal(false)}
@@ -610,12 +676,10 @@ const Watch = () => {
                 isOpen={showKeyboardHelp}
                 onClose={() => setShowKeyboardHelp(false)}
             />
-        </div >
+        </div>
     );
 };
 
 export default Watch;
-
-
 
 
