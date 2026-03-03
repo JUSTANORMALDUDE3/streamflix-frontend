@@ -47,7 +47,12 @@ const AdminVideoMgmt = () => {
     };
     useEffect(() => { fetchVideos(); }, []);
 
-    // ── Selection helpers ──────────────────────────────────────────
+    const handleSelectionPointerDown = (event, updater) => {
+        event.preventDefault();
+        updater();
+    };
+
+    // Selection helpers
     const allSelected = videos.length > 0 && selected.size === videos.length;
     const toggleAll = () => setSelected(allSelected ? new Set() : new Set(videos.map(v => v._id)));
     const toggleOne = (id) => {
@@ -56,7 +61,7 @@ const AdminVideoMgmt = () => {
         setSelected(next);
     };
 
-    // ── Bulk action ────────────────────────────────────────────────
+    // Bulk action
     const runBulkAction = async () => {
         if (!bulkAction || selected.size === 0) return;
         setBulkWorking(true); setBulkMsg('');
@@ -73,18 +78,18 @@ const AdminVideoMgmt = () => {
             });
 
             const count = res.data.deletedCount ?? res.data.modifiedCount ?? selected.size;
-            setBulkMsg(`✅ ${count} videos updated.`);
+            setBulkMsg(`${count} videos updated.`);
             setSelected(new Set());
             setBulkAction('');
             fetchVideos();
         } catch (err) {
-            setBulkMsg(`❌ ${err.response?.data?.message || 'Bulk action failed.'}`);
+            setBulkMsg(`${err.response?.data?.message || 'Bulk action failed.'}`);
         } finally {
             setBulkWorking(false);
         }
     };
 
-    // ── Single delete ──────────────────────────────────────────────
+    // Single delete
     const handleDeleteVideo = async () => {
         if (!videoToDelete) return;
         setIsDeleting(true);
@@ -117,14 +122,14 @@ const AdminVideoMgmt = () => {
 
             {error && <div className="error-message" style={{ margin: '16px 0' }}>{error}</div>}
 
-            {/* ── Bulk Actions Bar ────────────────────────────────── */}
+            {/* Bulk Actions Bar */}
             {selected.size > 0 && (
                 <div className="admin-card glass" style={{ margin: '0 0 16px', padding: '12px 16px', background: 'rgba(99,102,241,0.1)', border: '1px solid rgba(99,102,241,0.3)', display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '12px' }}>
                     <span style={{ fontWeight: 600, color: '#6366f1' }}>{selected.size} selected</span>
 
                     <select className="input-field" style={{ width: 'auto', padding: '6px 10px', fontSize: '0.85rem' }}
                         value={bulkAction} onChange={e => { setBulkAction(e.target.value); setBulkMsg(''); }}>
-                        <option value="">Choose action…</option>
+                        <option value="">Choose action...</option>
                         <option value="delete">Delete</option>
                         <option value="changeRank">Change Rank</option>
                         <option value="addTags">Add Tags</option>
@@ -157,7 +162,11 @@ const AdminVideoMgmt = () => {
             <div className="admin-card glass" style={{ padding: '24px' }}>
                 {/* Select-all header */}
                 <div className="flex-row ai-center gap-3" style={{ marginBottom: '12px', paddingBottom: '12px', borderBottom: '1px solid var(--border-color)' }}>
-                    <button onClick={toggleAll} style={{ background: 'transparent', cursor: 'pointer', color: allSelected ? '#6366f1' : 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.85rem', border: 'none', padding: 0 }}>
+                    <button
+                        type="button"
+                        onPointerDown={(event) => handleSelectionPointerDown(event, toggleAll)}
+                        style={{ background: 'transparent', cursor: 'pointer', color: allSelected ? '#6366f1' : 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.85rem', border: 'none', padding: 0 }}
+                    >
                         {allSelected ? <CheckSquare size={18} /> : <Square size={18} />}
                         {allSelected ? 'Deselect All' : 'Select All'}
                     </button>
@@ -174,7 +183,11 @@ const AdminVideoMgmt = () => {
 
                                 <div className="flex-row gap-3 ai-center" style={{ flex: 1, minWidth: 0 }}>
                                     {/* Checkbox */}
-                                    <button onClick={() => toggleOne(video._id)} style={{ background: 'transparent', cursor: 'pointer', color: isChecked ? '#6366f1' : 'var(--text-muted)', flexShrink: 0, border: 'none', padding: '4px' }}>
+                                    <button
+                                        type="button"
+                                        onPointerDown={(event) => handleSelectionPointerDown(event, () => toggleOne(video._id))}
+                                        style={{ background: 'transparent', cursor: 'pointer', color: isChecked ? '#6366f1' : 'var(--text-muted)', flexShrink: 0, border: 'none', padding: '4px' }}
+                                    >
                                         {isChecked ? <CheckSquare size={18} /> : <Square size={18} />}
                                     </button>
 
@@ -245,3 +258,4 @@ const AdminVideoMgmt = () => {
 };
 
 export default AdminVideoMgmt;
+

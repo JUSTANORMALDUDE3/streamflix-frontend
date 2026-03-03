@@ -207,7 +207,6 @@
     color: #fff;
 }
 
-/* Mobile Responsiveness */
 @media (max-width: 768px) {
     .navbar {
         padding: 0 12px;
@@ -242,5 +241,24 @@
 
     .navbar-right {
         gap: 6px;
+    }
+}
+
+/* Very small phones — hide rank badge to prevent overflow */
+@media (max-width: 480px) {
+    .rank-badge {
+        display: none;
+    }
+
+    .navbar-right {
+        gap: 4px;
+    }
+
+    .search-bar .input-field {
+        width: 100px;
+    }
+
+    .search-bar .input-field:focus {
+        width: 140px;
     }
 }

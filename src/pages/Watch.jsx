@@ -37,8 +37,6 @@ const Watch = () => {
     const canvasRef = useRef(null);
     const playerWrapperRef = useRef(null);
     const controlsTimeoutRef = useRef(null);
-    const analyticsTimerRef = useRef(null);
-    const hasFiredAnalytics = useRef(false);
 
     const [isPlaying, setIsPlaying] = useState(true);
     const [progress, setProgress] = useState(0);
@@ -49,29 +47,6 @@ const Watch = () => {
     const [showControls, setShowControls] = useState(true);
     const [isFullScreen, setIsFullScreen] = useState(false);
     const [isBuffering, setIsBuffering] = useState(true);
-
-    // -- Analytics: fire view event once after 10s of playback -----------
-    useEffect(() => {
-        const vid = videoRef.current;
-        if (!vid || !video) return;
-        let timer = null;
-        const handlePlay = () => {
-            if (hasFiredAnalytics.current) return;
-            timer = setTimeout(() => {
-                hasFiredAnalytics.current = true;
-                const watchTime = Math.round(vid.currentTime || 0);
-                axios.post('/analytics/view', { videoId: video._id, watchTime }).catch(() => { });
-            }, 10000);
-        };
-        const handlePause = () => { clearTimeout(timer); timer = null; };
-        vid.addEventListener('play', handlePlay);
-        vid.addEventListener('pause', handlePause);
-        return () => {
-            vid.removeEventListener('play', handlePlay);
-            vid.removeEventListener('pause', handlePause);
-            clearTimeout(timer);
-        };
-    }, [video]);
 
     useEffect(() => {
         const fetchVideo = async () => {
@@ -309,14 +284,15 @@ const Watch = () => {
             setCurrentTime(formatTime(current));
             setProgress(dur ? (current / dur) * 100 : 0);
 
-            // Trigger view tracking after 1 second of actual playback
+            // Record one analytics-backed view after 1 second of playback.
             if (current >= 1 && !hasViewed) {
                 setHasViewed(true);
-                axios.post(`/videos/${id}/view`)
-                    .then(res => setViewsCount(res.data.views))
+                axios.post('/analytics/view', {
+                    videoId: id,
+                    watchTime: Math.round(current)
+                })
+                    .then(res => setViewsCount(res.data.views || 0))
                     .catch(console.error);
-
-
             }
         }
     };
@@ -639,3 +615,7 @@ const Watch = () => {
 };
 
 export default Watch;
+
+
+
+

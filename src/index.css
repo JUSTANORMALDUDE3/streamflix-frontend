@@ -184,13 +184,23 @@ textarea {
    ═══════════════════════════════════ */
 
 @keyframes shimmer {
-  0% { background-position: 200% 0; }
-  100% { background-position: -200% 0; }
+  0% {
+    background-position: 200% 0;
+  }
+
+  100% {
+    background-position: -200% 0;
+  }
 }
 
 @keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+  0% {
+    transform: rotate(0deg);
+  }
+
+  100% {
+    transform: rotate(360deg);
+  }
 }
 
 @keyframes fadeInUp {
@@ -198,6 +208,7 @@ textarea {
     opacity: 0;
     transform: translateY(12px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -209,6 +220,7 @@ textarea {
     opacity: 0;
     transform: scale(0.92);
   }
+
   to {
     opacity: 1;
     transform: scale(1);
@@ -220,6 +232,7 @@ textarea {
     opacity: 0;
     transform: translateY(24px) scale(0.96);
   }
+
   to {
     opacity: 1;
     transform: translateY(0) scale(1);
@@ -227,35 +240,59 @@ textarea {
 }
 
 @keyframes float {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-6px); }
+
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-6px);
+  }
 }
 
 @keyframes pulseGlow {
-  0%, 100% { box-shadow: 0 0 0 0 rgba(99, 102, 241, 0.4); }
-  50% { box-shadow: 0 0 20px 4px rgba(99, 102, 241, 0.15); }
+
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(99, 102, 241, 0.4);
+  }
+
+  50% {
+    box-shadow: 0 0 20px 4px rgba(99, 102, 241, 0.15);
+  }
 }
 
 @keyframes gentlePulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.7; }
+
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.7;
+  }
 }
 
 @keyframes btnShimmer {
-  0% { left: -100%; }
-  100% { left: 200%; }
+  0% {
+    left: -100%;
+  }
+
+  100% {
+    left: 200%;
+  }
 }
 
 /* Skeleton Loading Animation — premium gradient sweep */
 .skeleton {
   background: var(--surface-color);
-  background-image: linear-gradient(
-    90deg,
-    var(--surface-color) 0%,
-    var(--surface-hover) 20%,
-    var(--surface-color) 40%,
-    var(--surface-color) 100%
-  );
+  background-image: linear-gradient(90deg,
+      var(--surface-color) 0%,
+      var(--surface-hover) 20%,
+      var(--surface-color) 40%,
+      var(--surface-color) 100%);
   background-size: 400% 100%;
   animation: shimmer 1.8s ease-in-out infinite;
 }
@@ -345,14 +382,20 @@ textarea {
   color: var(--text-main);
   font-size: 16px;
   transition: border-color var(--transition-fast),
-              box-shadow var(--transition-fast),
-              background var(--transition-fast);
+    box-shadow var(--transition-fast),
+    background var(--transition-fast);
 }
 
 .input-field:focus {
   border-color: var(--primary-color);
   box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15), 0 0 16px rgba(99, 102, 241, 0.08);
   background: rgba(255, 255, 255, 0.05);
+}
+
+/* Fix native browser dropdown option colors so they are always readable */
+select.input-field option {
+  background-color: #1a1d27;
+  color: #f8fafc;
 }
 
 /* Flex utilities */
@@ -374,9 +417,17 @@ textarea {
   justify-content: space-between;
 }
 
-.gap-1 { gap: 8px; }
-.gap-2 { gap: 16px; }
-.gap-3 { gap: 24px; }
+.gap-1 {
+  gap: 8px;
+}
+
+.gap-2 {
+  gap: 16px;
+}
+
+.gap-3 {
+  gap: 24px;
+}
 
 /* Hide HTML5 number input squishy spin buttons globally */
 input[type="number"]::-webkit-inner-spin-button,
@@ -400,6 +451,7 @@ input[type="number"] {
    Accessibility — Reduced Motion
    ═══════════════════════════════════ */
 @media (prefers-reduced-motion: reduce) {
+
   *,
   *::before,
   *::after {

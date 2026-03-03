@@ -80,17 +80,17 @@ const Playlists = () => {
             {isCreating && (
                 <form onSubmit={handleCreate} className="glass" style={{ padding: '1.5rem', marginBottom: '2rem', borderRadius: '12px' }}>
                     <h3 style={{ marginBottom: '1rem', fontSize: '1.1rem' }}>Create New Playlist</h3>
-                    <div style={{ display: 'flex', gap: '1rem' }}>
+                    <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
                         <input
                             type="text"
                             placeholder="Playlist Name"
                             value={newPlaylistName}
                             onChange={(e) => setNewPlaylistName(e.target.value)}
-                            style={{ flex: 1, padding: '10px 14px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'rgba(0,0,0,0.2)', color: 'white' }}
+                            style={{ flex: '1 1 160px', minWidth: 0, padding: '10px 14px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'rgba(0,0,0,0.2)', color: 'white' }}
                             autoFocus
                         />
-                        <button type="submit" className="btn-primary" disabled={!newPlaylistName.trim()}>Create</button>
-                        <button type="button" onClick={() => setIsCreating(false)} style={{ padding: '10px 14px', background: 'transparent', color: 'var(--text-muted)', border: 'none', cursor: 'pointer' }}>Cancel</button>
+                        <button type="submit" className="btn-primary" disabled={!newPlaylistName.trim()} style={{ flexShrink: 0 }}>Create</button>
+                        <button type="button" onClick={() => setIsCreating(false)} style={{ flexShrink: 0, padding: '10px 14px', background: 'transparent', color: 'var(--text-muted)', border: 'none', cursor: 'pointer' }}>Cancel</button>
                     </div>
                 </form>
             )}
