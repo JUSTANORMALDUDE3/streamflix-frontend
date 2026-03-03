@@ -8,15 +8,30 @@ import './VideoCard.css';
 // Hook: returns true when the ref enters the viewport
 const useInView = (ref, rootMargin = '200px') => {
     const [inView, setInView] = useState(false);
+
     useEffect(() => {
+        if (typeof window === 'undefined') return;
+
+        const isTouchViewport = window.matchMedia('(hover: none), (pointer: coarse)').matches;
+        if (!('IntersectionObserver' in window) || isTouchViewport) {
+            setInView(true);
+            return;
+        }
+
         const el = ref.current;
         if (!el) return;
+
         const obs = new IntersectionObserver(([entry]) => {
-            if (entry.isIntersecting) { setInView(true); obs.disconnect(); }
+            if (entry.isIntersecting) {
+                setInView(true);
+                obs.disconnect();
+            }
         }, { rootMargin });
+
         obs.observe(el);
         return () => obs.disconnect();
     }, [ref, rootMargin]);
+
     return inView;
 };
 
@@ -69,6 +84,7 @@ const VideoCard = ({ video }) => {
                         src={video.thumbnailUrl || 'https://via.placeholder.com/640x360.png?text=No+Thumbnail'}
                         alt={video.title}
                         className={`video-thumbnail thumbnail ${loaded ? 'loaded' : ''} ${isLocked ? 'locked-thumb' : ''}`}
+                        loading="lazy"
                         onLoad={(e) => {
                             e.target.classList.add('loaded');
                             setLoaded(true);
@@ -106,7 +122,6 @@ const VideoCard = ({ video }) => {
                     </div>
                 </div>
             </div>
-            {/* Dynamic bottom border indicating rank */}
             <div className="card-indicator" style={{ background: getRankTheme(video.rank) }}></div>
         </Link>
     );
